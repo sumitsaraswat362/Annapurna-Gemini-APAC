@@ -38,7 +38,7 @@ There is a massive gap in the market for an integrated, proactive solution that 
 
 **Annapurna** is a next-generation, AI-driven logistics platform designed specifically to eradicate food waste in transit. 
 
-We don't just track trucks; we protect perishables. By leveraging cutting-edge LLMs (powered by Groq) and real-time telemetry, Annapurna constantly monitors environmental conditions, vehicle health, and route efficiency to predict anomalies *before* they become disasters.
+We don't just track trucks; we protect perishables. By leveraging cutting-edge LLMs (powered by Gemini) and real-time telemetry, Annapurna constantly monitors environmental conditions, vehicle health, and route efficiency to predict anomalies *before* they become disasters.
 
 But we didn't stop there. 
 

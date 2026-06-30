@@ -1,12 +1,12 @@
 // ============================================================
-// ANNAPURNA — Agentic AI Decision Engine (Groq LLM Powered)
+// ANNAPURNA — Agentic AI Decision Engine (Gemini LLM Powered)
 // ============================================================
 //
-// This module integrates with the Groq API (Llama3-8b-8192) via
+// This module integrates with the Gemini API (Llama3-8b-8192) via
 // /api/ai-agent to perform autonomous real-time reasoning on
 // live truck telemetry (temperature, humidity, ethylene).
 //
-// Architecture: The Groq LLM generates the reasoning text and
+// Architecture: The Gemini LLM generates the reasoning text and
 // confidence score. If the API is unavailable or times out
 // (>5s), the engine gracefully falls back to a high-performance
 // deterministic rules engine for zero-downtime reliability.
@@ -27,7 +27,7 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
     telemetry.ethyleneLevel
   );
 
-  let groqDecision: any = null;
+  let geminiDecision: any = null;
   try {
     const res = await fetch('/api/ai-agent', {
       method: 'POST',
@@ -36,10 +36,10 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
       signal: AbortSignal.timeout(5000) // 5s timeout to not block UI
     });
     if (res.ok) {
-      groqDecision = await res.json();
+      geminiDecision = await res.json();
     }
   } catch (e) {
-    console.warn("Groq API fallback triggered:", e);
+    console.warn("Gemini API fallback triggered:", e);
   }
 
   // --- Decision Logic ---
@@ -49,12 +49,12 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: groqDecision?.reasoning || `All systems nominal. Temperature ${telemetry.temperature}°C is within safe range (≤${safeTemperatureMax}°C). Humidity at ${telemetry.humidity}%. Ethylene levels: ${telemetry.ethyleneLevel}. Continuing delivery to ${cargo.originalDestination?.name || "its destination"}.`,
+      reasoning: geminiDecision?.reasoning || `All systems nominal. Temperature ${telemetry.temperature}°C is within safe range (≤${safeTemperatureMax}°C). Humidity at ${telemetry.humidity}%. Ethylene levels: ${telemetry.ethyleneLevel}. Continuing delivery to ${cargo.originalDestination?.name || "its destination"}.`,
       recommendation: "continue",
       suggestedMarket: null,
       estimatedRecoveryPercent: 100,
       estimatedRecoveryValue: cargo.estimatedCargoValue,
-      confidence: groqDecision?.confidence || 0.95,
+      confidence: geminiDecision?.confidence || 0.95,
     };
   }
 
@@ -63,12 +63,12 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: groqDecision?.reasoning || `⚠️ WARNING: Temperature ${telemetry.temperature}°C exceeds safe limit of ${safeTemperatureMax}°C. However, estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. Cargo will survive transit. Continuing delivery with elevated monitoring.`,
+      reasoning: geminiDecision?.reasoning || `⚠️ WARNING: Temperature ${telemetry.temperature}°C exceeds safe limit of ${safeTemperatureMax}°C. However, estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. Cargo will survive transit. Continuing delivery with elevated monitoring.`,
       recommendation: "continue",
       suggestedMarket: null,
       estimatedRecoveryPercent: 90,
       estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * 0.9),
-      confidence: groqDecision?.confidence || 0.75,
+      confidence: geminiDecision?.confidence || 0.75,
     };
   }
 
@@ -79,12 +79,12 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: groqDecision?.reasoning || `🚨 CRITICAL: Cold chain failure detected. Temperature ${telemetry.temperature}°C far exceeds safe limit of ${safeTemperatureMax}°C. Ethylene levels: ${telemetry.ethyleneLevel.toUpperCase()}. Estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. NO viable markets found within spoilage window. Cargo at severe risk.`,
+      reasoning: geminiDecision?.reasoning || `🚨 CRITICAL: Cold chain failure detected. Temperature ${telemetry.temperature}°C far exceeds safe limit of ${safeTemperatureMax}°C. Ethylene levels: ${telemetry.ethyleneLevel.toUpperCase()}. Estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. NO viable markets found within spoilage window. Cargo at severe risk.`,
       recommendation: "emergency_sell",
       suggestedMarket: null,
       estimatedRecoveryPercent: 20,
       estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * 0.2),
-      confidence: groqDecision?.confidence || 0.6,
+      confidence: geminiDecision?.confidence || 0.6,
     };
   }
 
@@ -94,7 +94,7 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
   return {
     cargoId: cargo.id,
     timestamp: Date.now(),
-    reasoning: groqDecision?.reasoning || `🚨 COLD CHAIN FAILURE DETECTED
+    reasoning: geminiDecision?.reasoning || `🚨 COLD CHAIN FAILURE DETECTED
 
 Current temperature: ${telemetry.temperature}°C — exceeds safe limit of ${safeTemperatureMax}°C
 Humidity: ${telemetry.humidity}% | Ethylene: ${telemetry.ethyleneLevel.toUpperCase()}
@@ -112,7 +112,7 @@ Broadcasting to nearby wholesalers for immediate purchase.`,
     suggestedMarket: nearestMarket,
     estimatedRecoveryPercent: recoveryPercent,
     estimatedRecoveryValue: recoveryValue,
-    confidence: groqDecision?.confidence || 0.88,
+    confidence: geminiDecision?.confidence || 0.88,
   };
 }
 

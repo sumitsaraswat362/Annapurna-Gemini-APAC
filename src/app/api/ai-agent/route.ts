@@ -29,34 +29,36 @@ Rules:
 3. If Temperature > Max Safe and Spoilage In <= ETA to Destination: recommendation is "emergency_sell".
 `;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        messages: [{ role: 'system', content: systemPrompt }],
-        temperature: 0.2,
-        response_format: { type: "json_object" }
+        contents: [{
+          parts: [{ text: systemPrompt }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json"
+        }
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Groq API error:', errorText);
-      return NextResponse.json({ error: 'Failed to fetch from Groq' }, { status: 500 });
+      console.error('Gemini API error:', errorText);
+      return NextResponse.json({ error: 'Failed to fetch from Gemini' }, { status: 500 });
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    const content = data.candidates[0].content.parts[0].text;
     
     try {
       const parsed = JSON.parse(content);
       return NextResponse.json(parsed);
     } catch (e) {
-      return NextResponse.json({ error: 'Invalid JSON response from Groq' }, { status: 500 });
+      return NextResponse.json({ error: 'Invalid JSON response from Gemini' }, { status: 500 });
     }
   } catch (error) {
     console.error('API Route Error:', error);

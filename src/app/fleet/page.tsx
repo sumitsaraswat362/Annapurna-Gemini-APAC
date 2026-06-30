@@ -696,7 +696,7 @@ function FleetTrackingView() {
               </div>
             </div>
           </div>
-          <p className="text-[10px] text-[var(--text-tertiary)] mt-3 relative z-10 flex items-center gap-1">Powered by Groq LLM <span className="animate-spin text-xs">⟳</span> Live</p>
+          <p className="text-[10px] text-[var(--text-tertiary)] mt-3 relative z-10 flex items-center gap-1">Powered by Gemini LLM <span className="animate-spin text-xs">⟳</span> Live</p>
         </div>
 
         {/* Feature: AI Routing & Eco-Efficiency */}
