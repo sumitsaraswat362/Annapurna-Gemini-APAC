@@ -60,9 +60,9 @@ export function BiddingPage() {
                 <span className="text-sm font-bold text-white uppercase tracking-wider">Live Agent Status</span>
               </div>
               <p className="text-xs text-gray-400 font-mono">
-                > Analyzing 420 active spot markets...<br />
-                > Calculating optimal yield margins...<br />
-                > DecisionAgent ready for counters.
+                &gt; Analyzing 420 active spot markets...<br />
+                &gt; Calculating optimal yield margins...<br />
+                &gt; DecisionAgent ready for counters.
               </p>
             </div>
           </motion.div>

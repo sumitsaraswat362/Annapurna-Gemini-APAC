@@ -171,9 +171,9 @@ const AgentControlCenter = () => {
                     <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: \`\${stat.raw}%\` }}
+                        animate={{ width: `${stat.raw}%` }}
                         transition={{ duration: 1.5, delay: 0.5 + (i * 0.2), ease: "easeOut" }}
-                        className={\`h-full \${stat.color} shadow-[0_0_10px_currentColor]\`}
+                        className={`h-full ${stat.color} shadow-[0_0_10px_currentColor]`}
                       />
                     </div>
                   </div>
@@ -205,7 +205,7 @@ const AgentControlCenter = () => {
         </div>
       </div>
       
-      <style dangerouslySetInnerHTML={{__html: \`
+      <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
@@ -219,7 +219,7 @@ const AgentControlCenter = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(6, 182, 212, 0.4);
         }
-      \`}} />
+      `}} />
     </div>
   );
 };

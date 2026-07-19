@@ -124,7 +124,7 @@ export function TrackingPage() {
                   animate={{ opacity: 1, x: 0 }} 
                   className="text-xs font-mono text-emerald-400/90"
                 >
-                  > {log}
+                  &gt; {log}
                 </motion.div>
               ))}
             </div>
