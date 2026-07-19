@@ -41,11 +41,25 @@ export function Hero() {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
           <h1 className="text-5xl md:text-8xl font-semibold tracking-tighter mb-4 md:mb-6 text-[var(--text-primary)] drop-shadow-sm pb-2 leading-tight">
-            Logistics <br /> Perfected by AI.
+            Autonomous <br /> Multi-Agent AI.
           </h1>
           <p className="text-xl text-[var(--text-secondary)] font-medium max-w-2xl mx-auto">
-            The ultimate Food Logistics & Fleet Tracking platform. Built for precision, designed for scale.
+            The ultimate Autonomous Agent Nerve Center for Logistics. Built for precision, powered by predictive analytics.
           </p>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 mt-10">
+            <a href="/nerve-center" className="relative group rounded-full">
+              <span className="absolute -inset-0.5 bg-gradient-to-r from-[#007AFF] to-[#34C759] rounded-full blur opacity-75 group-hover:opacity-100 transition duration-200"></span>
+              <span className="relative flex items-center justify-center px-8 py-4 bg-[var(--bg-primary)] rounded-full text-[var(--text-primary)] font-bold tracking-wide border border-[var(--separator)] group-hover:bg-[var(--fill-secondary)] transition-colors shadow-xl">
+                Enter Nerve Center
+              </span>
+            </a>
+            <a href="/analytics" className="relative group rounded-full">
+              <span className="absolute -inset-0.5 bg-gradient-to-r from-[#FF2D55] to-[#5E5CE6] rounded-full blur opacity-75 group-hover:opacity-100 transition duration-200"></span>
+              <span className="relative flex items-center justify-center px-8 py-4 bg-[var(--bg-primary)] rounded-full text-[var(--text-primary)] font-bold tracking-wide border border-[var(--separator)] group-hover:bg-[var(--fill-secondary)] transition-colors shadow-xl">
+                Explore Predictive Analytics
+              </span>
+            </a>
+          </div>
         </motion.div>
 
         {/* Device Mockups — transparent PNGs, no blend modes */}

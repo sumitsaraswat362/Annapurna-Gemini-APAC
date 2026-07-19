@@ -67,18 +67,18 @@ export function BentoGrid() {
               <div className="w-12 h-12 bg-[var(--fill-secondary)] rounded-xl flex items-center justify-center mb-6 border border-[var(--separator)] shadow-sm">
                 <Globe className="text-[var(--text-primary)] w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Wholesaler Bidding</h3>
-              <p className="text-[var(--text-secondary)] font-medium">Connect with local wholesalers. Automated bidding ensures you get the best price for your excess inventory before it spoils.</p>
+              <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Live Agent Tracking</h3>
+              <p className="text-[var(--text-secondary)] font-medium">Monitor all autonomous AI agents in real-time. Watch them orchestrate your supply chain, negotiate contracts, and optimize logistics.</p>
             </div>
             
             <div className="mt-8 flex gap-4">
               <div className="bg-[var(--fill-secondary)] p-4 rounded-2xl border border-[var(--separator)] backdrop-blur-sm flex-1 shadow-sm">
-                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Current Bid</div>
-                <div className="text-xl font-bold text-[#34C759]">$4,250.00</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Active Agents</div>
+                <div className="text-xl font-bold text-[#34C759]">1,248</div>
               </div>
               <div className="bg-[var(--fill-secondary)] p-4 rounded-2xl border border-[var(--separator)] backdrop-blur-sm flex-1 shadow-sm">
-                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Time Left</div>
-                <div className="text-xl font-bold text-[var(--text-primary)]">04:12:00</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Decisions/sec</div>
+                <div className="text-xl font-bold text-[var(--text-primary)]">85.4</div>
               </div>
             </div>
           </div>
@@ -98,8 +98,8 @@ export function BentoGrid() {
             <div className="w-12 h-12 bg-[#FF3B30]/10 rounded-xl flex items-center justify-center mb-6 border border-[#FF3B30]/20 shadow-sm">
               <ShieldAlert className="text-[#FF3B30] w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Emergency SOS</h3>
-            <p className="text-[var(--text-secondary)] font-medium text-sm">Instant dispatch of backup refrigeration units if your primary system fails mid-transit.</p>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Predictive AI</h3>
+            <p className="text-[var(--text-secondary)] font-medium text-sm">Advanced forecasting models predict disruptions before they happen, ensuring optimal uptime.</p>
           </div>
         </motion.div>
 
@@ -136,8 +136,8 @@ export function BentoGrid() {
             <div className="w-12 h-12 bg-[#34C759]/10 rounded-xl flex items-center justify-center mb-6 border border-[#34C759]/20 shadow-sm">
               <Leaf className="text-[#34C759] w-6 h-6" />
             </div>
-            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Eco-Efficiency</h3>
-            <p className="text-[var(--text-secondary)] font-medium">Reduce carbon footprint by optimizing engine idling and temperature compressor cycles automatically.</p>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Sustainability Impact</h3>
+            <p className="text-[var(--text-secondary)] font-medium">Reduce your carbon footprint. Our multi-agent AI optimizes routes and energy consumption for a greener future.</p>
           </div>
           <div className="md:w-1/2 h-full w-full min-h-[300px] relative">
              <ImageWithFallback 

@@ -2,7 +2,7 @@
 // ANNAPURNA — Agentic AI Decision Engine (Gemini LLM Powered)
 // ============================================================
 //
-// This module integrates with the Gemini API (Llama3-8b-8192) via
+// This module integrates with the Gemini API (Gemini 1.5 Flash) via
 // /api/ai-agent to perform autonomous real-time reasoning on
 // live truck telemetry (temperature, humidity, ethylene).
 //
