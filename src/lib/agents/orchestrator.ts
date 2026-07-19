@@ -1,6 +1,6 @@
 import { Cargo, Market, AIDecision } from "../types";
 import { makeDecision } from "../ai-agent";
-import { GoogleGenerativeAI, FunctionDeclaration, Type } from "@google/generative-ai";
+import { GoogleGenerativeAI, FunctionDeclaration, SchemaType } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -8,14 +8,14 @@ const rerouteTruckDeclaration: FunctionDeclaration = {
   name: "reroute_truck",
   description: "Reroute a truck to a new destination market.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       truckId: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The ID of the truck to reroute",
       },
       destination: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The name of the new destination market",
       },
     },
@@ -27,10 +27,10 @@ const alertWholesalerDeclaration: FunctionDeclaration = {
   name: "alert_wholesaler",
   description: "Send an alert message to the wholesaler.",
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       message: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: "The message to send to the wholesaler",
       },
     },
@@ -228,7 +228,7 @@ export async function runAutonomousCycle() {
   const toolExecutions: any[] = [];
 
   for (const cargo of atRiskCargos) {
-    const prompt = `Cargo ${cargo.id} (Truck ${cargo.truckId}) is at risk. Type: ${cargo.type}. Temperature is ${cargo.telemetry.temperature}°C (Max safe: ${cargo.safeTemperatureMax}°C). Please reroute this truck to the nearest available market (e.g., "Okhla Sabzi Mandi") or alert the wholesaler that the cargo is spoiling.`;
+    const prompt = `Cargo ${cargo.id} (Truck ${cargo.truckId}) is at risk. SchemaType: ${cargo.type}. Temperature is ${cargo.telemetry.temperature}°C (Max safe: ${cargo.safeTemperatureMax}°C). Please reroute this truck to the nearest available market (e.g., "Okhla Sabzi Mandi") or alert the wholesaler that the cargo is spoiling.`;
 
     try {
       const result = await model.generateContent(prompt);

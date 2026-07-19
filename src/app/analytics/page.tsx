@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchArimaForecast } from "./actions";
+import { ForecastDataPoint } from "../../lib/bigquery-client";
 import { Send, Bot, Database, BarChart3, AlertTriangle, Truck, Leaf, IndianRupee, CloudOff, Activity, Scale, Gavel } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
@@ -23,6 +25,11 @@ const esgMetrics = [
 
 export default function AnalyticsDashboard() {
   const [activeTab, setActiveTab] = useState<'analytics' | 'legal'>('analytics');
+  const [arimaData, setArimaData] = useState<ForecastDataPoint[]>([]);
+
+  useEffect(() => {
+    fetchArimaForecast().then(data => setArimaData(data)).catch(console.error);
+  }, []);
   
   // Analytics State
   const [query, setQuery] = useState("");
@@ -316,44 +323,98 @@ export default function AnalyticsDashboard() {
                   </motion.div>
                 )}
 
-                {/* Predictive AI Modeling Section */}
+                {/* BigQuery ML Predictive AI Section */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-gradient-to-br from-white/5 to-white/10 border border-[var(--separator)] rounded-2xl p-6 shadow-2xl backdrop-blur-xl relative overflow-hidden shrink-0 mt-auto"
+                  className="bg-gradient-to-br from-[#1a202c]/60 to-[#2d3748]/60 border border-[var(--separator)] rounded-2xl p-6 shadow-2xl backdrop-blur-2xl relative overflow-hidden shrink-0 mt-auto"
                 >
-                  <div className="absolute top-0 right-0 p-32 bg-red-500/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
+                  <div className="absolute top-0 right-0 p-32 bg-blue-500/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 p-32 bg-purple-500/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
+                  
                   <div className="relative z-10">
-                    <h3 className="text-lg font-medium flex items-center gap-2 mb-2 text-[var(--text-primary)]">
-                      <Activity className="w-5 h-5 text-red-400" />
-                      Predictive AI Modeling Forecast
-                    </h3>
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-300 rounded-lg p-3 mb-6 flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
-                      <p className="text-sm">
-                        <strong>Critical Alert:</strong> 3 trucks likely to spoil tomorrow due to high regional temperatures. Immediate rerouting recommended.
-                      </p>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold flex items-center gap-2 text-[var(--text-primary)]">
+                        <Database className="w-6 h-6 text-blue-400" />
+                        BigQuery ML: Predictive Forecasting
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
+                        <span className="text-xs font-mono text-blue-400 tracking-wider">ARIMA MODEL ACTIVE</span>
+                      </div>
                     </div>
-                    <div className="h-[250px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={forecastData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f87171" stopOpacity={0.8}/>
-                              <stop offset="95%" stopColor="#f87171" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                          <XAxis dataKey="day" stroke="currentColor" className="text-[var(--text-tertiary)]" fontSize={12} tickLine={false} axisLine={false} />
-                          <YAxis stroke="currentColor" className="text-[var(--text-tertiary)]" fontSize={12} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: 'var(--bg-primary)', border: '1px solid var(--separator)', borderRadius: '8px' }}
-                            itemStyle={{ color: 'var(--text-primary)' }}
-                          />
-                          <Area type="monotone" dataKey="riskLevel" stroke="#f87171" strokeWidth={2} fillOpacity={1} fill="url(#colorRisk)" />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                    
+                    <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 rounded-xl p-4 mb-6 flex items-start gap-4 backdrop-blur-md">
+                      <Activity className="w-6 h-6 mt-0.5 shrink-0 text-blue-400" />
+                      <div>
+                        <p className="text-sm font-semibold mb-1">14-Day Spoilage Risk Projection</p>
+                        <p className="text-xs opacity-80">
+                          Forecasting generated via Google Cloud BigQuery ML. Data indicates a projected risk spike around Day 10. Recommend proactive rerouting of fleet assets to mitigate potential losses.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-[280px] w-full">
+                      {arimaData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={arimaData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorBqRisk" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff15" vertical={false} />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="#94a3b8" 
+                              fontSize={11} 
+                              tickLine={false} 
+                              axisLine={false}
+                              tickFormatter={(val) => {
+                                const d = new Date(val);
+                                return `${d.getDate()} ${d.toLocaleString('default', { month: 'short' })}`;
+                              }}
+                            />
+                            <YAxis 
+                              stroke="#94a3b8" 
+                              fontSize={11} 
+                              tickLine={false} 
+                              axisLine={false} 
+                              tickFormatter={(val) => `${val}%`}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'rgba(15, 23, 42, 0.8)', 
+                                backdropFilter: 'blur(12px)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                borderRadius: '12px',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+                              }}
+                              itemStyle={{ color: '#e2e8f0', fontWeight: 600 }}
+                              labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '4px' }}
+                            />
+                            <Area 
+                              type="monotone" 
+                              dataKey="predicted_spoilage_risk" 
+                              name="Predicted Risk"
+                              stroke="#3b82f6" 
+                              strokeWidth={3} 
+                              fillOpacity={1} 
+                              fill="url(#colorBqRisk)" 
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center flex-col gap-3">
+                          <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                          <div className="text-xs font-mono text-blue-400">Executing BigQuery Job...</div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>

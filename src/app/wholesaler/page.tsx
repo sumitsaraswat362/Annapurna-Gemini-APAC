@@ -310,9 +310,9 @@ export default function WholesalerDashboard() {
               </div>
             )}
           </>
-        ) : (
-          /* ===== ORDERS TAB ===== */
+        ) : activeTab === "orders" ? (
           <>
+            {/* ===== ORDERS TAB ===== */}
             {/* Desktop Table */}
             <div className="glass liquid-glass rounded-2xl overflow-hidden hidden md:block border border-[var(--separator)] shadow-lg">
               <table className="w-full">
@@ -480,8 +480,8 @@ export default function WholesalerDashboard() {
             </div>
           </>
         ) : (
-          /* ===== QA TAB ===== */
           <div className="max-w-2xl mx-auto">
+            {/* ===== QA TAB ===== */}
             <div className="glass liquid-glass rounded-[2rem] p-8 shadow-xl border border-[var(--separator)] relative overflow-hidden">
               <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#AF52DE]/20 rounded-full blur-3xl"></div>
               <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[#007AFF]/20 rounded-full blur-3xl"></div>

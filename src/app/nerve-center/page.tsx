@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import NegotiationPit from './NegotiationPit';
 
 const allLogs = [
   { agent: 'System', message: 'Initializing Neural Routing Core...', type: 'system' },
@@ -206,6 +207,9 @@ const AgentControlCenter = () => {
           </motion.div>
           
         </div>
+        
+        {/* Active Negotiation Pit */}
+        <NegotiationPit />
       </div>
       
       <style dangerouslySetInnerHTML={{__html: `

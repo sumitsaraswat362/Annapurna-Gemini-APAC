@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { Bid, CargoType } from "@/lib/types";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useIoTStream } from "@/hooks/useIoTStream";
 
 const LiveMap = dynamic(() => import("@/components/LiveMap"), { ssr: false });
 
@@ -394,10 +395,12 @@ function DashboardView() {
 function FleetTrackingView() {
   const { state, dispatch } = useAppState();
   const { user } = useAuth();
+  const mockCargos = useIoTStream(8); // 8 mock trucks
   
   // Only show cargos owned by this user
   // Exclude delivered cargos from active fleet view
-  const myCargos = state.cargos.filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered");
+  const baseCargos = state.cargos.filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered");
+  const myCargos = [...baseCargos, ...mockCargos];
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [selectedCargoId, setSelectedCargoId] = useState<string>("cargo-001");
@@ -921,6 +924,7 @@ function FleetTrackingView() {
                   routePoints={selectedCargo.routePolyline || []}
                   status={selectedCargo.status}
                   reroute={selectedCargo.selectedMarket && selectedCargo.status === "rerouting" ? { name: selectedCargo.selectedMarket.name, location: selectedCargo.selectedMarket.location } : null}
+                  otherTrucks={mockCargos.filter((c: any) => c.id !== selectedCargo.id)}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[var(--text-tertiary)] text-xs bg-[var(--bg-primary)]">

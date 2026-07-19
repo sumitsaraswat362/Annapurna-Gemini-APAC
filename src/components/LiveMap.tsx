@@ -9,6 +9,7 @@ interface LiveMapProps {
   routePoints?: { lat: number; lng: number }[];
   status?: string;
   reroute?: { name: string; location: { lat: number; lng: number } } | null;
+  otherTrucks?: any[];
 }
 
 export default function LiveMap({
@@ -18,6 +19,7 @@ export default function LiveMap({
   routePoints,
   status,
   reroute,
+  otherTrucks = [],
 }: LiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -115,6 +117,23 @@ export default function LiveMap({
           }).addTo(map);
         }
 
+        // Other Trucks
+        otherTrucks.forEach((truck: any) => {
+          if (truck.currentLocation?.lat) {
+            const isWarning = truck.status === "warning" || truck.status === "emergency";
+            const tColor = isWarning ? "#FF9500" : "#34C759";
+            L.marker([truck.currentLocation.lat, truck.currentLocation.lng], {
+              icon: L.divIcon({
+                className: "",
+                html: `<div style="width:10px;height:10px;background:${tColor};border-radius:50%;border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 8px ${tColor}"></div>`,
+                iconSize: [10, 10], iconAnchor: [5, 5],
+              }),
+            })
+            .addTo(map)
+            .bindTooltip(truck.truckPlate, { className: "lm-tip", offset: [0, -5] as any });
+          }
+        });
+
         // Fit
         const all: [number, number][] = [
           [origin.location.lat, origin.location.lng],
@@ -122,6 +141,9 @@ export default function LiveMap({
         if (destination?.location?.lat) all.push([destination.location.lat, destination.location.lng]);
         if (currentLocation?.lat) all.push([currentLocation.lat, currentLocation.lng]);
         if (reroute?.location?.lat) all.push([reroute.location.lat, reroute.location.lng]);
+        otherTrucks.forEach((t: any) => {
+          if (t.currentLocation?.lat) all.push([t.currentLocation.lat, t.currentLocation.lng]);
+        });
         map.fitBounds(L.latLngBounds(all), { padding: [30, 30] });
 
         setLoading(false);
@@ -140,7 +162,7 @@ export default function LiveMap({
         mapInstanceRef.current = null;
       }
     };
-  }, [origin?.location?.lat, origin?.location?.lng, destination?.location?.lat, destination?.location?.lng, currentLocation?.lat, status, reroute?.location?.lat]);
+  }, [origin?.location?.lat, origin?.location?.lng, destination?.location?.lat, destination?.location?.lng, currentLocation?.lat, status, reroute?.location?.lat, otherTrucks]);
 
   return (
     <div className="relative w-full h-full">
