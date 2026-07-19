@@ -34,7 +34,7 @@ export function Hero() {
       <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center pt-32 px-6" style={{ overflow: "visible" }}>
         {/* Hero Text */}
         <motion.div 
-          className="max-w-4xl mx-auto text-center mt-32 md:mt-40"
+          className="max-w-4xl mx-auto text-center mt-56 md:mt-64"
           style={{ y: textY, opacity: textOpacity, zIndex: 10 }}
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -50,13 +50,13 @@ export function Hero() {
             <a href="/nerve-center" className="relative group rounded-full">
               <span className="absolute -inset-0.5 bg-gradient-to-r from-[#007AFF] to-[#34C759] rounded-full blur opacity-75 group-hover:opacity-100 transition duration-200"></span>
               <span className="relative flex items-center justify-center px-8 py-4 bg-[var(--bg-primary)] rounded-full text-[var(--text-primary)] font-bold tracking-wide border border-[var(--separator)] group-hover:bg-[var(--fill-secondary)] transition-colors shadow-xl">
-                Enter Nerve Center
+                See How It Works (Nerve Center)
               </span>
             </a>
             <a href="/analytics" className="relative group rounded-full">
               <span className="absolute -inset-0.5 bg-gradient-to-r from-[#FF2D55] to-[#5E5CE6] rounded-full blur opacity-75 group-hover:opacity-100 transition duration-200"></span>
               <span className="relative flex items-center justify-center px-8 py-4 bg-[var(--bg-primary)] rounded-full text-[var(--text-primary)] font-bold tracking-wide border border-[var(--separator)] group-hover:bg-[var(--fill-secondary)] transition-colors shadow-xl">
-                Explore Predictive Analytics
+                View Fleet Analytics
               </span>
             </a>
           </div>

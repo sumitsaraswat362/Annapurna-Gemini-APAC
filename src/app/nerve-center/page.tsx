@@ -58,7 +58,7 @@ const AgentControlCenter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-200 font-mono p-4 md:p-8 selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-mono p-4 md:p-8 selection:bg-cyan-500/30">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header */}
