@@ -9,13 +9,15 @@ import Link from "next/link";
 
 export default function WholesalerDashboard() {
   const { state, dispatch } = useAppState();
-  const [activeTab, setActiveTab] = useState<"offers" | "orders">("offers");
+  const [activeTab, setActiveTab] = useState<"offers" | "orders" | "qa">("offers");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ spoilagePercentage: number, reasoning: string } | null>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
-      if (hash === "offers" || hash === "orders") {
-        setActiveTab(hash as "offers" | "orders");
+      if (hash === "offers" || hash === "orders" || hash === "qa") {
+        setActiveTab(hash as "offers" | "orders" | "qa");
       } else {
         setActiveTab("offers");
       }
@@ -25,7 +27,7 @@ export default function WholesalerDashboard() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const handleTabClick = (tab: "offers" | "orders") => {
+  const handleTabClick = (tab: "offers" | "orders" | "qa") => {
     window.location.hash = tab;
   };
 
@@ -101,6 +103,28 @@ export default function WholesalerDashboard() {
       dispatch({ type: "ADD_BID", bid: newBid });
     }
   };
+  const handleScanCargo = async () => {
+    setIsScanning(true);
+    setScanResult(null);
+    try {
+      // Using a sample rotten tomato image URL for the simulation
+      const sampleImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Rotten_tomato.jpg/800px-Rotten_tomato.jpg";
+      const response = await fetch("/api/vision/qc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: sampleImageUrl })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setScanResult(data);
+      }
+    } catch (error) {
+      console.error("Scan failed", error);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] aura-container relative">
@@ -195,6 +219,16 @@ export default function WholesalerDashboard() {
           >
             My Orders
             <span className="ml-2 text-[var(--text-tertiary)]">({orders.length})</span>
+          </button>
+          <button
+            onClick={() => handleTabClick("qa")}
+            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all ${
+              activeTab === "qa" 
+                ? "bg-[var(--bg-primary)] shadow-md text-[var(--text-primary)]" 
+                : "text-[var(--text-secondary)] hover:bg-[var(--fill-tertiary)]"
+            }`}
+          >
+            Vision QA
           </button>
         </div>
 
@@ -445,6 +479,85 @@ export default function WholesalerDashboard() {
               })}
             </div>
           </>
+        ) : (
+          /* ===== QA TAB ===== */
+          <div className="max-w-2xl mx-auto">
+            <div className="glass liquid-glass rounded-[2rem] p-8 shadow-xl border border-[var(--separator)] relative overflow-hidden">
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#AF52DE]/20 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[#007AFF]/20 rounded-full blur-3xl"></div>
+              
+              <div className="relative z-10 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-[#AF52DE]/20 to-[#007AFF]/20 border border-[var(--separator)] flex items-center justify-center clay">
+                  <svg className="w-10 h-10 text-[#AF52DE]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Quality Assurance</h2>
+                <p className="text-[var(--text-secondary)] mb-8 font-medium">Use Vision AI to instantly assess the quality of received cargo and detect spoilage before accepting.</p>
+                
+                {!scanResult ? (
+                  <button
+                    onClick={handleScanCargo}
+                    disabled={isScanning}
+                    className="skeuomorphic-btn bg-gradient-to-r from-[#AF52DE] to-[#007AFF] text-white px-8 py-4 text-lg w-full md:w-auto relative overflow-hidden group"
+                  >
+                    {isScanning ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Scanning Cargo...
+                      </span>
+                    ) : (
+                      "Scan Cargo (Simulate Upload)"
+                    )}
+                  </button>
+                ) : (
+                  <div className="bg-[var(--fill-secondary)] rounded-2xl p-6 text-left border border-[var(--separator)] animate-in fade-in zoom-in duration-300">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-[var(--text-primary)]">Scan Results</h3>
+                      <span className={`badge ${scanResult.spoilagePercentage > 20 ? 'badge-danger' : 'badge-safe'} shadow-sm`}>
+                        {scanResult.spoilagePercentage}% Spoilage
+                      </span>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="h-2 w-full bg-[var(--fill-tertiary)] rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${scanResult.spoilagePercentage > 20 ? 'bg-[#FF3B30]' : 'bg-[#34C759]'}`}
+                          style={{ width: `${scanResult.spoilagePercentage}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-[var(--bg-primary)] p-4 rounded-xl border border-[var(--separator)] mb-6">
+                      <p className="text-sm text-[var(--text-secondary)] font-medium leading-relaxed">
+                        <span className="font-bold text-[var(--text-primary)] mr-2">AI Reasoning:</span>
+                        {scanResult.reasoning}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-4">
+                      <button 
+                        onClick={() => setScanResult(null)}
+                        className="flex-1 py-3 px-4 rounded-xl font-bold text-[var(--text-primary)] bg-[var(--fill-tertiary)] hover:bg-[var(--fill-secondary)] transition-colors border border-[var(--separator)]"
+                      >
+                        Scan Another
+                      </button>
+                      <button 
+                        className={`flex-1 py-3 px-4 rounded-xl font-bold text-white shadow-lg transition-all ${
+                          scanResult.spoilagePercentage > 20 
+                            ? 'bg-[#FF3B30] hover:bg-[#FF3B30]/90 shadow-[#FF3B30]/20' 
+                            : 'bg-[#34C759] hover:bg-[#34C759]/90 shadow-[#34C759]/20'
+                        }`}
+                      >
+                        {scanResult.spoilagePercentage > 20 ? 'Reject Cargo' : 'Accept Cargo'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Stats Footer */}

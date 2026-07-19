@@ -1,5 +1,51 @@
 import { Cargo, Market, AIDecision } from "../types";
 import { makeDecision } from "../ai-agent";
+import { GoogleGenerativeAI, FunctionDeclaration, Type } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+const rerouteTruckDeclaration: FunctionDeclaration = {
+  name: "reroute_truck",
+  description: "Reroute a truck to a new destination market.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      truckId: {
+        type: Type.STRING,
+        description: "The ID of the truck to reroute",
+      },
+      destination: {
+        type: Type.STRING,
+        description: "The name of the new destination market",
+      },
+    },
+    required: ["truckId", "destination"],
+  },
+};
+
+const alertWholesalerDeclaration: FunctionDeclaration = {
+  name: "alert_wholesaler",
+  description: "Send an alert message to the wholesaler.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      message: {
+        type: Type.STRING,
+        description: "The message to send to the wholesaler",
+      },
+    },
+    required: ["message"],
+  },
+};
+
+// Dummy local functions
+function reroute_truck(truckId: string, destination: string) {
+  return `Successfully rerouted truck ${truckId} to ${destination}.`;
+}
+
+function alert_wholesaler(message: string) {
+  return `Wholesaler alerted: ${message}`;
+}
 
 // Mock Data
 const MOCK_MARKETS: Market[] = [
@@ -168,6 +214,47 @@ export async function runAutonomousCycle() {
   const alerts = await NotificationAgent.sendAlerts(evaluatedCargos);
   console.log(`[Orchestrator] Sent ${alerts.length} alerts.`);
 
+  console.log("[Orchestrator] Initiating True Function Calling test with Gemini...");
+  
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-pro",
+    tools: [
+      {
+        functionDeclarations: [rerouteTruckDeclaration, alertWholesalerDeclaration],
+      },
+    ],
+  });
+
+  const toolExecutions: any[] = [];
+
+  for (const cargo of atRiskCargos) {
+    const prompt = `Cargo ${cargo.id} (Truck ${cargo.truckId}) is at risk. Type: ${cargo.type}. Temperature is ${cargo.telemetry.temperature}°C (Max safe: ${cargo.safeTemperatureMax}°C). Please reroute this truck to the nearest available market (e.g., "Okhla Sabzi Mandi") or alert the wholesaler that the cargo is spoiling.`;
+
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const functionCalls = response.functionCalls();
+
+      if (functionCalls && functionCalls.length > 0) {
+        for (const call of functionCalls) {
+          console.log(`[Orchestrator][Nerve Center Log] Model triggered tool: ${call.name}`);
+          let toolResult;
+          if (call.name === "reroute_truck") {
+            const args = call.args as any;
+            toolResult = reroute_truck(args.truckId, args.destination);
+          } else if (call.name === "alert_wholesaler") {
+            const args = call.args as any;
+            toolResult = alert_wholesaler(args.message);
+          }
+          console.log(`[Orchestrator][Nerve Center Log] Tool Execution Result: ${toolResult}`);
+          toolExecutions.push({ name: call.name, args: call.args, result: toolResult });
+        }
+      }
+    } catch (e) {
+      console.error("[Orchestrator] Error during function calling test:", e);
+    }
+  }
+
   return {
     totalCargosChecked: allCargos.length,
     atRiskCount: atRiskCargos.length,
@@ -176,6 +263,7 @@ export async function runAutonomousCycle() {
       recommendation: e.decision.recommendation,
       confidence: e.decision.confidence,
     })),
-    alertsSent: alerts
+    alertsSent: alerts,
+    toolExecutions
   };
 }
