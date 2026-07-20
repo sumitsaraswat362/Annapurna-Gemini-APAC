@@ -94,14 +94,14 @@ const AgentControlCenter = () => {
         </motion.header>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[75vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[75vh]">
           
           {/* Terminal View */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-2 relative rounded-xl bg-black/60 border border-cyan-500/20 shadow-[0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-2xl overflow-hidden flex flex-col"
+            className="lg:col-span-2 relative min-h-[400px] rounded-xl bg-black/60 border border-cyan-500/20 shadow-[0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-2xl overflow-hidden flex flex-col"
           >
             {/* Terminal Header */}
             <div className="h-10 border-b border-cyan-500/20 bg-[var(--fill-secondary)]/90 border-b border-[var(--separator)] flex items-center px-4 justify-between backdrop-blur-md">
