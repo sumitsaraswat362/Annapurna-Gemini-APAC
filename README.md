@@ -101,18 +101,18 @@ graph TD
 *Showcasing our newest features: The Nerve Center, Predictive Analytics, and Live Dashboard.*
 
 <div align="center">
-  <img src="public/images/readme/new-1.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-2.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-3.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-4.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-5.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-6.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-7.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-8.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-9.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-10.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-11.png" width="48%" style="border-radius: 8px; margin: 4px;">
-  <img src="public/images/readme/new-12.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-1.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-2.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-3.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-4.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-5.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-6.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-7.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-8.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-9.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-10.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-11.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-12.jpg" width="48%" style="border-radius: 8px; margin: 4px;">
 </div>
 
 ---
