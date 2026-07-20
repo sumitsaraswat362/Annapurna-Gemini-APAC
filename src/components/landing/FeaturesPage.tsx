@@ -199,29 +199,38 @@ export function FeaturesPage() {
           {features.map((feature, index) => (
             <motion.div
               key={feature.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.02, y: -4 }}
-              className={`relative overflow-hidden rounded-[40px] border border-[var(--separator)] bg-[var(--bg-secondary)]/50 backdrop-blur-xl p-8 flex flex-col group hover:border-[var(--fill-secondary)] transition-all duration-300 shadow-sm hover:shadow-xl ${feature.colSpan}`}
+              transition={{ delay: index * 0.05, duration: 0.5, ease: "easeOut" }}
+              whileHover={{ 
+                scale: 1.03, 
+                y: -5,
+                rotateX: 2,
+                rotateY: -2,
+                skewX: -1
+              }}
+              className={`relative overflow-hidden rounded-[2.5rem] border border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/10 backdrop-blur-3xl p-8 flex flex-col group transition-all duration-500 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_0_rgba(31,38,135,0.15)] dark:hover:shadow-[0_20px_50px_0_rgba(6,182,212,0.15)] ${feature.colSpan}`}
+              style={{ transformPerspective: 1000 }}
             >
-              {/* Subtle hover gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+              {/* Liquid Glass & Droplet effects */}
+              <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-gradient-to-br from-white/20 to-transparent rounded-full blur-2xl group-hover:opacity-100 opacity-50 transition-opacity duration-700 pointer-events-none mix-blend-overlay"></div>
+              <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-gradient-to-tr from-[var(--text-primary)]/5 to-transparent rounded-full blur-2xl group-hover:opacity-100 opacity-0 transition-opacity duration-700 pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:via-transparent dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-[2.5rem]" />
               
-              <div className="flex items-start justify-between mb-6 relative z-10">
-                <div className={`p-4 rounded-2xl ${feature.color}`}>
-                  <feature.icon className="w-8 h-8" />
+              <div className="flex items-start justify-between mb-8 relative z-10">
+                <div className={`p-4 rounded-3xl ${feature.color} bg-opacity-20 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-inner group-hover:scale-110 transition-transform duration-500`}>
+                  <feature.icon className="w-8 h-8 drop-shadow-md" />
                 </div>
                 {feature.badge && (
-                  <span className="px-3 py-1 text-xs font-medium rounded-full bg-[var(--bg-primary)] border border-[var(--separator)] text-[var(--text-secondary)] shadow-sm">
+                  <span className="px-3 py-1.5 text-xs font-bold tracking-wider rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-[var(--text-primary)] shadow-[0_2px_10px_rgba(0,0,0,0.1)]">
                     {feature.badge}
                   </span>
                 )}
               </div>
               
               <div className="relative z-10 mt-auto">
-                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[var(--text-primary)] group-hover:to-[var(--text-secondary)] transition-all">
+                <h3 className="text-2xl font-extrabold text-[var(--text-primary)] mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-[var(--text-primary)] group-hover:to-cyan-500 transition-all duration-300 drop-shadow-sm">
                   {feature.title}
                 </h3>
                 <p className="text-[var(--text-secondary)] leading-relaxed font-medium">

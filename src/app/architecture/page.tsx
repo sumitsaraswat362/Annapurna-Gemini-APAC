@@ -265,17 +265,19 @@ export default function CloudStackPage() {
                     onMouseLeave={() => setActiveNode(null)}
                     onClick={() => setActiveNode(isActive ? null : node)}
                     className={`
-                      relative ios-card glass p-5 md:p-6 cursor-pointer transition-all duration-500 overflow-hidden group
-                      ${isActive ? `ring-2 ${node.glowShadow}` : ''}
-                      ${isAnyActive && !isActive ? 'opacity-50 scale-[0.98]' : 'opacity-100'}
+                      relative ios-card glass bg-white/10 dark:bg-black/10 backdrop-blur-3xl border border-white/20 dark:border-white/10 p-5 md:p-6 cursor-pointer transition-all duration-500 overflow-hidden group
+                      ${isActive ? `ring-2 ring-white/50 dark:ring-white/20 shadow-[0_0_40px_rgba(255,255,255,0.2)] dark:shadow-[0_0_40px_rgba(255,255,255,0.1)] ${node.glowShadow} scale-[1.02]` : 'hover:shadow-[0_20px_50px_rgba(0,122,255,0.15)] dark:hover:shadow-[0_20px_50px_rgba(6,182,212,0.15)] hover:-skew-y-1 hover:scale-[1.02] hover:rotate-1'}
+                      ${isAnyActive && !isActive ? 'opacity-40 scale-[0.95] blur-[2px]' : 'opacity-100'}
                     `}
                     style={isActive ? { borderColor: `${node.accent}40` } : {}}
                   >
-                    {/* Glow background on hover */}
                     <div 
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-                      style={{ background: `radial-gradient(600px circle at 50% 50%, ${node.accent}08, transparent 60%)` }}
+                      style={{ background: `radial-gradient(600px circle at 50% 50%, ${node.accent}15, transparent 70%)` }}
                     />
+                    {/* Liquid Droplet overlay */}
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-gradient-to-br from-white/30 to-transparent rounded-full blur-2xl group-hover:opacity-100 opacity-20 transition-opacity duration-700 pointer-events-none mix-blend-overlay"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 dark:from-white/5 dark:via-transparent dark:to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     
                     <div className="relative z-10 flex items-center gap-5">
                       {/* Icon with gradient background */}
@@ -375,12 +377,12 @@ export default function CloudStackPage() {
                 {activeNode ? (
                   <motion.div
                     key={activeNode.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.97 }}
-                    transition={{ duration: 0.3 }}
-                    className={`ios-card glass p-8 overflow-hidden ${activeNode.glowShadow}`}
-                    style={{ borderColor: `${activeNode.accent}30` }}
+                    initial={{ opacity: 0, y: 20, scale: 0.95, rotateX: 10 }}
+                    animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95, rotateX: -10 }}
+                    transition={{ duration: 0.4, type: "spring" }}
+                    className={`ios-card glass bg-white/10 dark:bg-black/10 backdrop-blur-3xl border border-white/20 dark:border-white/10 p-8 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] ${activeNode.glowShadow}`}
+                    style={{ borderColor: `${activeNode.accent}40`, transformPerspective: 1000 }}
                   >
                     {/* Gradient header bar */}
                     <div 
