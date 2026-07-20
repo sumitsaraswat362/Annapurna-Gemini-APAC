@@ -19,7 +19,7 @@ const allLogs = [
 const AgentControlCenter = () => {
   const [logs, setLogs] = useState<typeof allLogs>([]);
   const [logIndex, setLogIndex] = useState(0);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (logIndex < allLogs.length) {
@@ -39,7 +39,9 @@ const AgentControlCenter = () => {
   }, [logIndex]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [logs]);
 
   const getColor = (type: string, agent: string) => {
@@ -114,7 +116,10 @@ const AgentControlCenter = () => {
             </div>
 
             {/* Terminal Body */}
-            <div className="p-4 overflow-y-auto flex-1 font-mono text-sm space-y-3 custom-scrollbar">
+            <div 
+              ref={scrollContainerRef}
+              className="p-4 overflow-y-auto flex-1 font-mono text-sm space-y-3 custom-scrollbar"
+            >
               <AnimatePresence initial={false}>
                 {logs.map((log, i) => (
                   <motion.div
@@ -136,7 +141,6 @@ const AgentControlCenter = () => {
                   </motion.div>
                 ))}
               </AnimatePresence>
-              <div ref={bottomRef} />
               
               {/* Blinking cursor */}
               <motion.div 
