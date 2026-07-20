@@ -8,24 +8,29 @@ import {
   BrainCircuit, 
   Database, 
   Flame, 
-  ArrowRight,
+  ArrowDown,
   Server,
   Activity,
   ShieldCheck,
-  Zap
+  Zap,
+  Sparkles,
+  ChevronRight,
+  Globe
 } from "lucide-react";
 import { FloatingNav } from "@/components/landing/FloatingNav";
+import { FooterCTA } from "@/components/landing/FooterCTA";
 
 type Node = {
   id: string;
   title: string;
   subtitle: string;
   icon: React.ElementType;
-  color: string;
-  lightColor: string;
-  glowColor: string;
+  accent: string;
+  gradient: string;
+  glowShadow: string;
   description: string;
   details: string[];
+  stat: { label: string; value: string };
 };
 
 const nodes: Node[] = [
@@ -34,75 +39,80 @@ const nodes: Node[] = [
     title: "IoT Sensors",
     subtitle: "Google Cloud IoT Core",
     icon: Wifi,
-    color: "bg-[#4285F4]/10 text-[#4285F4] border-[#4285F4]/30",
-    lightColor: "#4285F4",
-    glowColor: "shadow-[0_0_30px_rgba(66,133,244,0.4)]",
+    accent: "#4285F4",
+    gradient: "from-[#4285F4] to-[#1A73E8]",
+    glowShadow: "shadow-[0_8px_40px_rgba(66,133,244,0.35)]",
     description: "Real-Time Telemetry Ingestion",
     details: [
-      "Captures high-frequency temperature, humidity, and GPS data from active cold chain trucks.",
-      "Streams data securely over MQTT/HTTP to the cloud.",
-      "Edge processing to filter anomalous spikes before transmission."
+      "Captures high-frequency temperature, humidity, GPS & vibration data from cold chain trucks.",
+      "Streams data securely via MQTT/HTTP with edge-level anomaly filtering.",
+      "Supports offline LoRaWAN mesh fallback for zero-connectivity rural areas."
     ],
+    stat: { label: "Data Points/sec", value: "12,400" },
   },
   {
     id: "cloudrun",
     title: "Cloud Run",
     subtitle: "Serverless Containers",
     icon: Container,
-    color: "bg-[#34A853]/10 text-[#34A853] border-[#34A853]/30",
-    lightColor: "#34A853",
-    glowColor: "shadow-[0_0_30px_rgba(52,168,83,0.4)]",
-    description: "Serverless Compute & APIs",
+    accent: "#34A853",
+    gradient: "from-[#34A853] to-[#1E8E3E]",
+    glowShadow: "shadow-[0_8px_40px_rgba(52,168,83,0.35)]",
+    description: "Serverless Compute & API Layer",
     details: [
-      "Auto-scaled serverless backend handling all API requests and autonomous agent execution.",
-      "Zero infrastructure management — pay only for what you use.",
-      "Deploys the multi-agent orchestrator that runs MonitorAgent, DecisionAgent, and NotificationAgent."
+      "Auto-scaled serverless backend handling all API requests and agent orchestration.",
+      "Deploys MonitorAgent, DecisionAgent, NotificationAgent as autonomous microservices.",
+      "Zero infrastructure management — scales from 0 to 10,000 requests instantly."
     ],
+    stat: { label: "Avg Latency", value: "42ms" },
   },
   {
     id: "vertexai",
     title: "Gemini 2.5 Flash",
     subtitle: "Vertex AI • Generative AI",
     icon: BrainCircuit,
-    color: "bg-[#AF52DE]/10 text-[#AF52DE] border-[#AF52DE]/30",
-    lightColor: "#AF52DE",
-    glowColor: "shadow-[0_0_30px_rgba(175,82,222,0.4)]",
-    description: "Multi-Agent AI Engine",
+    accent: "#AF52DE",
+    gradient: "from-[#AF52DE] to-[#8E44AD]",
+    glowShadow: "shadow-[0_8px_40px_rgba(175,82,222,0.35)]",
+    description: "Multi-Agent AI Decision Engine",
     details: [
-      "Powers real-time spoilage prediction with sub-second inference latency.",
-      "Enables Function Calling — AI agents execute reroute_truck() and alert_wholesaler() autonomously.",
-      "RAG pipeline retrieves FSSAI legal documents to generate compliance reports."
+      "Sub-second spoilage prediction with autonomous rerouting via Function Calling.",
+      "RAG pipeline retrieves FSSAI legal documents for compliance report generation.",
+      "Vision AI analyzes cargo images for multi-modal quality inspection at checkpoints."
     ],
+    stat: { label: "AI Decisions", value: "85/sec" },
   },
   {
     id: "bigquery",
     title: "BigQuery",
     subtitle: "Data Warehouse & ML",
     icon: Database,
-    color: "bg-[#FBBC04]/10 text-[#FBBC04] border-[#FBBC04]/30",
-    lightColor: "#FBBC04",
-    glowColor: "shadow-[0_0_30px_rgba(251,188,4,0.4)]",
+    accent: "#FBBC04",
+    gradient: "from-[#FBBC04] to-[#F29900]",
+    glowShadow: "shadow-[0_8px_40px_rgba(251,188,4,0.35)]",
     description: "Analytics & Predictive Modeling",
     details: [
       "Historical telemetry warehouse powering the conversational analytics dashboard.",
       "Users query fleet data in plain English — AI generates SQL and returns visual charts.",
       "BigQuery ML runs ARIMA forecasts to predict future cold-chain failures."
     ],
+    stat: { label: "Data Processed", value: "4.2TB" },
   },
   {
     id: "firestore",
     title: "Cloud Firestore",
     subtitle: "Real-Time NoSQL Database",
     icon: Flame,
-    color: "bg-[#EA4335]/10 text-[#EA4335] border-[#EA4335]/30",
-    lightColor: "#EA4335",
-    glowColor: "shadow-[0_0_30px_rgba(234,67,53,0.4)]",
+    accent: "#EA4335",
+    gradient: "from-[#EA4335] to-[#D93025]",
+    glowShadow: "shadow-[0_8px_40px_rgba(234,67,53,0.35)]",
     description: "Live State & Marketplace",
     details: [
-      "NoSQL database holding live operational state for all fleet vehicles.",
-      "Instantly syncs truck locations, active distress bids, and agent actions to all clients.",
-      "Provides sub-second latency for the wholesaler bidding marketplace."
+      "Real-time NoSQL database syncing live fleet state across all connected clients.",
+      "Powers the wholesaler bidding marketplace with sub-second transaction latency.",
+      "Stores agent communication logs for the autonomous Nerve Center dashboard."
     ],
+    stat: { label: "Sync Latency", value: "<50ms" },
   },
 ];
 
@@ -117,192 +127,284 @@ export default function CloudStackPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden relative flex flex-col font-sans">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(66,133,244,0.08),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(66,133,244,0.15),transparent_60%)] -z-10" />
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(175,82,222,0.06),transparent_60%)] dark:bg-[radial-gradient(circle,rgba(175,82,222,0.12),transparent_60%)] -z-10" />
+    <div className="bg-[var(--bg-primary)] min-h-screen text-[var(--text-primary)] font-sans font-['Inter'] overflow-x-hidden selection:bg-[#007AFF] selection:text-white aura-container">
+      {/* Background Mesh Gradients */}
+      <div className="aura-orb aura-blue w-[60%] h-[60%] top-[-25%] left-[-15%] opacity-40 blur-[120px]" />
+      <div className="aura-orb aura-green w-[50%] h-[50%] bottom-[-15%] right-[-15%] opacity-30 blur-[100px]" />
+      <div className="fixed top-[30%] right-[-10%] w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(175,82,222,0.08),transparent_60%)] dark:bg-[radial-gradient(circle,rgba(175,82,222,0.15),transparent_60%)] pointer-events-none" />
       
       <FloatingNav activeTab="cloud-stack" />
       
-      <main className="flex-1 flex flex-col lg:flex-row items-stretch max-w-7xl w-full mx-auto p-6 lg:p-12 gap-12 pt-28">
-        {/* Header */}
-        <div className="w-full lg:hidden text-center mb-8">
-          <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-3">Google Cloud Stack</h1>
-          <p className="text-[var(--text-secondary)] text-lg">Hover over each service to explore its role</p>
+      <main className="relative z-10 pt-28 pb-12">
+        {/* Hero Section */}
+        <div className="max-w-7xl mx-auto px-6 mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[var(--separator)] mb-6">
+              <Globe className="w-4 h-4 text-[#4285F4]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">Powered by Google Cloud Platform</span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[var(--text-primary)] mb-4">
+              Cloud Stack <br />
+              <span className="bg-gradient-to-r from-[#4285F4] via-[#AF52DE] to-[#EA4335] bg-clip-text text-transparent">Explorer</span>
+            </h1>
+            <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto font-medium">
+              Explore the Google Cloud services powering Annapurna&apos;s autonomous cold-chain logistics platform.
+            </p>
+          </motion.div>
+          
+          {/* Stats Banner */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"
+          >
+            {[
+              { label: "Google Services", value: "5+", color: "#4285F4" },
+              { label: "AI Models Active", value: "3", color: "#AF52DE" },
+              { label: "Uptime SLA", value: "99.99%", color: "#34A853" },
+              { label: "Regions", value: "Global", color: "#EA4335" },
+            ].map((s, i) => (
+              <div key={i} className="ios-card glass p-4 text-center">
+                <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mt-1">{s.label}</div>
+              </div>
+            ))}
+          </motion.div>
         </div>
 
-        {/* Left Column: Visual Diagram */}
-        <div className="flex-1 flex items-center justify-center relative min-h-[600px]">
-          {/* Connecting Line */}
-          <div className="absolute left-12 top-12 bottom-12 w-[2px] bg-gradient-to-b from-[#4285F4]/20 via-[#AF52DE]/20 to-[#EA4335]/20 rounded-full hidden md:block" />
-
-          <div className="w-full flex flex-col gap-6 md:gap-10 relative z-10">
-            {/* Title - desktop only */}
-            <div className="hidden lg:block mb-4">
-              <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-2">Google Cloud Stack</h1>
-              <p className="text-[var(--text-secondary)] text-base">The services powering Annapurna&apos;s autonomous logistics platform</p>
-            </div>
-
+        {/* Main Content: Pipeline + Detail Panel */}
+        <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row gap-8 items-start">
+          
+          {/* Left: Service Pipeline */}
+          <div className="flex-[3] space-y-0">
             {nodes.map((node, index) => {
               const isActive = activeNode?.id === node.id;
               const isAnyActive = activeNode !== null;
               
               return (
-                <motion.div
-                  key={node.id}
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.15, duration: 0.5, type: "spring" }}
-                  onMouseEnter={() => setActiveNode(node)}
-                  onMouseLeave={() => setActiveNode(null)}
-                  className={`
-                    relative flex items-center gap-6 p-4 rounded-2xl cursor-pointer transition-all duration-500 glass
-                    ${isActive ? 'bg-[var(--fill-secondary)] shadow-lg scale-[1.02]' : ''}
-                    ${isAnyActive && !isActive ? 'opacity-40 scale-95' : 'opacity-100 scale-100'}
-                  `}
-                >
-                  {/* Connection Dot */}
-                  <div className="hidden md:flex absolute left-[-42px] w-4 h-4 rounded-full bg-[var(--bg-primary)] border-2 border-[var(--separator)] items-center justify-center">
-                    {isActive && (
-                      <motion.div 
-                        layoutId="activeDot"
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: node.lightColor }}
-                      />
-                    )}
-                  </div>
-
-                  {/* Icon */}
+                <div key={node.id}>
                   <motion.div
+                    initial={{ opacity: 0, x: -40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1, duration: 0.5, type: "spring" }}
+                    onMouseEnter={() => setActiveNode(node)}
+                    onMouseLeave={() => setActiveNode(null)}
+                    onClick={() => setActiveNode(isActive ? null : node)}
                     className={`
-                      w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center border backdrop-blur-xl transition-all duration-300
-                      ${node.color}
-                      ${isActive ? node.glowColor + ' scale-110' : ''}
+                      relative ios-card glass p-5 md:p-6 cursor-pointer transition-all duration-500 overflow-hidden group
+                      ${isActive ? `ring-2 ${node.glowShadow}` : ''}
+                      ${isAnyActive && !isActive ? 'opacity-50 scale-[0.98]' : 'opacity-100'}
                     `}
-                    animate={isActive ? {
-                      y: [0, -5, 0],
-                      transition: { repeat: Infinity, duration: 2, ease: "easeInOut" }
-                    } : {}}
+                    style={isActive ? { borderColor: `${node.accent}40` } : {}}
                   >
-                    <node.icon className={`w-8 h-8 md:w-10 md:h-10 ${isActive ? 'animate-pulse' : ''}`} />
+                    {/* Glow background on hover */}
+                    <div 
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                      style={{ background: `radial-gradient(600px circle at 50% 50%, ${node.accent}08, transparent 60%)` }}
+                    />
+                    
+                    <div className="relative z-10 flex items-center gap-5">
+                      {/* Icon with gradient background */}
+                      <motion.div
+                        animate={isActive ? {
+                          y: [0, -4, 0],
+                          transition: { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                        } : {}}
+                        className={`
+                          w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shrink-0 
+                          bg-gradient-to-br ${node.gradient} transition-all duration-300
+                          ${isActive ? node.glowShadow + ' scale-110' : 'shadow-lg'}
+                        `}
+                      >
+                        <node.icon className="w-7 h-7 md:w-8 md:h-8 text-white" />
+                      </motion.div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h3 className="text-lg md:text-xl font-bold text-[var(--text-primary)]">{node.title}</h3>
+                          <span 
+                            className="text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border"
+                            style={{ 
+                              color: node.accent,
+                              backgroundColor: `${node.accent}10`,
+                              borderColor: `${node.accent}25`,
+                            }}
+                          >
+                            {node.subtitle}
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium">{node.description}</p>
+                      </div>
+
+                      {/* Stat */}
+                      <div className="hidden md:flex flex-col items-end shrink-0">
+                        <div className="text-xl font-bold" style={{ color: node.accent }}>{node.stat.value}</div>
+                        <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{node.stat.label}</div>
+                      </div>
+
+                      {/* Chevron */}
+                      <ChevronRight 
+                        className={`w-5 h-5 text-[var(--text-quaternary)] shrink-0 transition-transform duration-300 ${isActive ? 'rotate-90' : ''}`} 
+                        style={isActive ? { color: node.accent } : {}}
+                      />
+                    </div>
+
+                    {/* Expanded details (mobile / click) */}
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="lg:hidden overflow-hidden"
+                        >
+                          <div className="pt-5 mt-5 border-t border-[var(--separator)] space-y-3">
+                            {node.details.map((detail, idx) => (
+                              <div key={idx} className="flex gap-3 items-start">
+                                <div 
+                                  className="mt-1 w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                                  style={{ backgroundColor: `${node.accent}15`, color: node.accent }}
+                                >
+                                  <Zap className="w-3 h-3" />
+                                </div>
+                                <span className="text-sm text-[var(--text-secondary)]">{detail}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
-
-                  {/* Title & Subtitle */}
-                  <div className="flex-1">
-                    <h3 className={`text-xl md:text-2xl font-bold tracking-tight transition-colors duration-300 text-[var(--text-primary)]`}>
-                      {node.title}
-                    </h3>
-                    <p className="text-xs font-bold uppercase tracking-wider mt-1" style={{ color: node.lightColor }}>
-                      {node.subtitle}
-                    </p>
-                    <p className={`text-sm font-medium mt-1 text-[var(--text-tertiary)]`}>
-                      {node.description}
-                    </p>
-                  </div>
-
-                  {/* Flow Arrow */}
+                  
+                  {/* Connector Arrow */}
                   {index < nodes.length - 1 && (
-                    <motion.div 
-                      animate={isActive ? { x: [0, 10, 0] } : {}}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="hidden md:flex absolute -bottom-8 left-10 text-[var(--text-quaternary)]"
-                    >
-                      <ArrowRight className="w-5 h-5 rotate-90" />
-                    </motion.div>
+                    <div className="flex justify-center py-2">
+                      <motion.div
+                        animate={{ y: [0, 4, 0] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                      >
+                        <ArrowDown className="w-5 h-5 text-[var(--text-quaternary)]" />
+                      </motion.div>
+                    </div>
                   )}
-                </motion.div>
+                </div>
               );
             })}
           </div>
-        </div>
 
-        {/* Right Column: Detail Panel */}
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="relative h-[500px] w-full max-w-lg mx-auto">
-            <AnimatePresence mode="wait">
-              {activeNode ? (
-                <motion.div
-                  key={activeNode.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 glass border border-[var(--separator)] rounded-3xl p-8 backdrop-blur-2xl shadow-2xl flex flex-col"
-                >
-                  <div 
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 w-fit"
-                    style={{ 
-                      backgroundColor: `${activeNode.lightColor}10`, 
-                      borderColor: `${activeNode.lightColor}30`,
-                      color: activeNode.lightColor 
-                    }}
+          {/* Right: Sticky Detail Panel (desktop) */}
+          <div className="flex-[2] hidden lg:block sticky top-28">
+            <div className="relative min-h-[500px]">
+              <AnimatePresence mode="wait">
+                {activeNode ? (
+                  <motion.div
+                    key={activeNode.id}
+                    initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.97 }}
+                    transition={{ duration: 0.3 }}
+                    className={`ios-card glass p-8 overflow-hidden ${activeNode.glowShadow}`}
+                    style={{ borderColor: `${activeNode.accent}30` }}
                   >
-                    <activeNode.icon className="w-5 h-5" />
-                    <span className="text-sm font-semibold tracking-wide uppercase">{activeNode.title}</span>
-                  </div>
-                  
-                  <h2 className="text-3xl font-bold mb-4 text-[var(--text-primary)]">
-                    {activeNode.description}
-                  </h2>
-                  
-                  <div className="h-px w-full bg-[var(--separator)] mb-6" />
-                  
-                  <ul className="space-y-6 flex-1">
-                    {activeNode.details.map((detail, idx) => (
-                      <motion.li 
-                        key={idx}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + idx * 0.1 }}
-                        className="flex gap-4 items-start text-[var(--text-secondary)] leading-relaxed"
+                    {/* Gradient header bar */}
+                    <div 
+                      className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${activeNode.gradient}`}
+                    />
+                    
+                    <div className="flex items-center gap-3 mb-6 mt-2">
+                      <div 
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${activeNode.gradient} shadow-lg`}
                       >
-                        <div 
-                          className="mt-1 rounded-full p-1 border"
-                          style={{ 
-                            backgroundColor: `${activeNode.lightColor}10`, 
-                            borderColor: `${activeNode.lightColor}30`,
-                            color: activeNode.lightColor 
-                          }}
+                        <activeNode.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[var(--text-primary)]">{activeNode.title}</h3>
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: activeNode.accent }}>{activeNode.subtitle}</span>
+                      </div>
+                    </div>
+                    
+                    <h2 className="text-2xl font-bold mb-5 text-[var(--text-primary)]">
+                      {activeNode.description}
+                    </h2>
+                    
+                    <div className="h-px w-full bg-[var(--separator)] mb-5" />
+                    
+                    <ul className="space-y-5">
+                      {activeNode.details.map((detail, idx) => (
+                        <motion.li 
+                          key={idx}
+                          initial={{ opacity: 0, x: 15 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 + idx * 0.1 }}
+                          className="flex gap-4 items-start"
                         >
-                          <Zap className="w-3 h-3" />
-                        </div>
-                        <span className="text-sm md:text-base">{detail}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                  
-                  <div className="mt-8 flex items-center justify-between p-4 bg-[var(--fill-secondary)] rounded-xl border border-[var(--separator)]">
-                    <div className="flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-[#34A853]" />
-                      <span className="text-xs font-mono text-[var(--text-tertiary)]">Google Cloud Native</span>
+                          <div 
+                            className="mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ 
+                              backgroundColor: `${activeNode.accent}12`,
+                              color: activeNode.accent,
+                            }}
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-sm text-[var(--text-secondary)] leading-relaxed">{detail}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                    
+                    {/* Stats footer */}
+                    <div className="mt-8 grid grid-cols-2 gap-3">
+                      <div className="ios-card glass p-4 text-center">
+                        <ShieldCheck className="w-5 h-5 mx-auto mb-2 text-[#34A853]" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Google Cloud Native</span>
+                      </div>
+                      <div className="ios-card glass p-4 text-center">
+                        <Server className="w-5 h-5 mx-auto mb-2 text-[#4285F4]" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Enterprise SLA</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Server className="w-5 h-5 text-[#4285F4]" />
-                      <span className="text-xs font-mono text-[var(--text-tertiary)]">99.99% Uptime</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="ios-card glass flex flex-col items-center justify-center text-center p-12 min-h-[500px]"
+                  >
+                    <div className="w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-[#4285F4] to-[#AF52DE] flex items-center justify-center shadow-lg shadow-[#4285F4]/20">
+                      <Activity className="w-10 h-10 text-white" />
                     </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center text-center border border-dashed border-[var(--separator)] rounded-3xl glass"
-                >
-                  <div className="w-20 h-20 mb-6 rounded-full bg-[var(--fill-secondary)] flex items-center justify-center">
-                    <Activity className="w-8 h-8 text-[var(--text-quaternary)]" />
-                  </div>
-                  <h3 className="text-xl font-medium text-[var(--text-secondary)] mb-2">Interactive Cloud Stack</h3>
-                  <p className="text-[var(--text-tertiary)] max-w-[250px] text-sm">
-                    Hover over any component to explore how Google Cloud services power the Annapurna platform.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] mb-3">Interactive Cloud Stack</h3>
+                    <p className="text-[var(--text-tertiary)] max-w-[280px] text-sm leading-relaxed">
+                      Hover over any service in the pipeline to explore how it powers the Annapurna platform.
+                    </p>
+                    <div className="mt-6 flex gap-2">
+                      {nodes.map((n) => (
+                        <div 
+                          key={n.id} 
+                          className="w-3 h-3 rounded-full transition-transform hover:scale-150 cursor-pointer"
+                          style={{ backgroundColor: n.accent }}
+                          onMouseEnter={() => setActiveNode(n)}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </main>
+      <FooterCTA />
     </div>
   );
 }
