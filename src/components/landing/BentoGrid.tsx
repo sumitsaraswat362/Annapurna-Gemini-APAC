@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { MouseEvent, useState } from "react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { Globe, ShieldAlert, Cpu, Leaf, Sparkles, Scale, Eye, Terminal, BarChart3, Wrench } from "lucide-react";
+import { Globe, ShieldAlert, Cpu, Leaf, Sparkles, Scale, Eye, Terminal, BarChart3, Wrench, Cloud } from "lucide-react";
 import Link from "next/link";
 
 export function BentoGrid() {
@@ -276,6 +276,29 @@ export function BentoGrid() {
             </div>
             <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Function Calling (AI Tools)</h3>
             <p className="text-[var(--text-secondary)] font-medium">Gemini agents execute real actions: reroute_truck(), alert_wholesaler(), scan_cargo(). True autonomous operations.</p>
+          </div>
+        </motion.div>
+
+        {/* Box 11: Google Cloud Stack */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(66,133,244,0.05)] dark:shadow-[0_20px_50px_rgba(66,133,244,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(66,133,244,0.08), transparent 40%)"
+               }} 
+          />
+          <Link href="/architecture" className="absolute inset-0 z-20" aria-label="Google Cloud Stack" />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 bg-[#4285F4]/10 rounded-xl flex items-center justify-center border border-[#4285F4]/20 shadow-sm group-hover:scale-110 transition-transform">
+                <Cloud className="text-[#4285F4] w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#4285F4] bg-[#4285F4]/10 px-3 py-1 rounded-full border border-[#4285F4]/20">Google Cloud</span>
+            </div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 group-hover:text-[#4285F4] transition-colors">Cloud Stack Explorer &rarr;</h3>
+            <p className="text-[var(--text-secondary)] font-medium text-sm">Explore how Vertex AI, Cloud Run, BigQuery, and Firestore power the Annapurna platform end-to-end.</p>
           </div>
         </motion.div>
 

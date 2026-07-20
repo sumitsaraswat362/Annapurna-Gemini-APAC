@@ -1,9 +1,9 @@
 import { motion } from "motion/react";
 import Link from "next/link";
-import { Home, LayoutDashboard, Map, Gavel } from "lucide-react";
+import { Home, LayoutDashboard, Map, Gavel, Cloud } from "lucide-react";
 
 interface FloatingNavProps {
-  activeTab: "features" | "tracking" | "bidding" | "home";
+  activeTab: "features" | "tracking" | "bidding" | "home" | "cloud-stack";
 }
 
 export function FloatingNav({ activeTab }: FloatingNavProps) {
@@ -11,6 +11,7 @@ export function FloatingNav({ activeTab }: FloatingNavProps) {
     { id: "features", label: "Features", href: "/features", icon: LayoutDashboard },
     { id: "tracking", label: "Tracking", href: "/tracking", icon: Map },
     { id: "bidding", label: "Bidding", href: "/bidding", icon: Gavel },
+    { id: "cloud-stack", label: "Cloud Stack", href: "/architecture", icon: Cloud },
   ] as const;
 
   return (

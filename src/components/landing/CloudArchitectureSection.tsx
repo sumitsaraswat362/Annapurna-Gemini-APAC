@@ -83,7 +83,7 @@ export const CloudArchitectureSection = () => {
         >
           <Link href="/architecture">
             <button className="btn-primary-ios group">
-              Explore the Architecture
+              Explore the Cloud Stack
               <svg 
                 className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" 
                 fill="none" 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Wifi, 
   Container, 
@@ -14,13 +14,15 @@ import {
   ShieldCheck,
   Zap
 } from "lucide-react";
-import Link from "next/link";
+import { FloatingNav } from "@/components/landing/FloatingNav";
 
 type Node = {
   id: string;
   title: string;
+  subtitle: string;
   icon: React.ElementType;
   color: string;
+  lightColor: string;
   glowColor: string;
   description: string;
   details: string[];
@@ -30,9 +32,11 @@ const nodes: Node[] = [
   {
     id: "iot",
     title: "IoT Sensors",
+    subtitle: "Google Cloud IoT Core",
     icon: Wifi,
-    color: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    glowColor: "shadow-[0_0_30px_rgba(59,130,246,0.5)]",
+    color: "bg-[#4285F4]/10 text-[#4285F4] border-[#4285F4]/30",
+    lightColor: "#4285F4",
+    glowColor: "shadow-[0_0_30px_rgba(66,133,244,0.4)]",
     description: "Real-Time Telemetry Ingestion",
     details: [
       "Captures high-frequency temperature, humidity, and GPS data from active cold chain trucks.",
@@ -43,58 +47,66 @@ const nodes: Node[] = [
   {
     id: "cloudrun",
     title: "Cloud Run",
+    subtitle: "Serverless Containers",
     icon: Container,
-    color: "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
-    glowColor: "shadow-[0_0_30px_rgba(99,102,241,0.5)]",
+    color: "bg-[#34A853]/10 text-[#34A853] border-[#34A853]/30",
+    lightColor: "#34A853",
+    glowColor: "shadow-[0_0_30px_rgba(52,168,83,0.4)]",
     description: "Serverless Compute & APIs",
     details: [
-      "Highly scalable containerized environment handling our Next.js backend and IoT ingestion.",
-      "Auto-scales from zero to thousands of instances during high-traffic route rerouting.",
-      "Serves the distress marketplace APIs seamlessly."
+      "Auto-scaled serverless backend handling all API requests and autonomous agent execution.",
+      "Zero infrastructure management — pay only for what you use.",
+      "Deploys the multi-agent orchestrator that runs MonitorAgent, DecisionAgent, and NotificationAgent."
     ],
   },
   {
-    id: "vertex",
-    title: "Vertex AI",
+    id: "vertexai",
+    title: "Gemini 2.5 Flash",
+    subtitle: "Vertex AI • Generative AI",
     icon: BrainCircuit,
-    color: "bg-purple-500/10 text-purple-400 border-purple-500/30",
-    glowColor: "shadow-[0_0_30px_rgba(168,85,247,0.5)]",
-    description: "Agentic AI Core",
+    color: "bg-[#AF52DE]/10 text-[#AF52DE] border-[#AF52DE]/30",
+    lightColor: "#AF52DE",
+    glowColor: "shadow-[0_0_30px_rgba(175,82,222,0.4)]",
+    description: "Multi-Agent AI Engine",
     details: [
-      "Powers the Annapurna AI Agent utilizing advanced LLMs.",
-      "Predicts commodity spoilage based on thermal degradation models.",
-      "Autonomously negotiates and reroutes trucks to nearby wholesalers when distress is detected."
+      "Powers real-time spoilage prediction with sub-second inference latency.",
+      "Enables Function Calling — AI agents execute reroute_truck() and alert_wholesaler() autonomously.",
+      "RAG pipeline retrieves FSSAI legal documents to generate compliance reports."
     ],
   },
   {
     id: "bigquery",
     title: "BigQuery",
+    subtitle: "Data Warehouse & ML",
     icon: Database,
-    color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    glowColor: "shadow-[0_0_30px_rgba(16,185,129,0.5)]",
-    description: "Enterprise Data Warehouse",
+    color: "bg-[#FBBC04]/10 text-[#FBBC04] border-[#FBBC04]/30",
+    lightColor: "#FBBC04",
+    glowColor: "shadow-[0_0_30px_rgba(251,188,4,0.4)]",
+    description: "Analytics & Predictive Modeling",
     details: [
-      "Stores petabytes of historical IoT data, route histories, and market transactions.",
-      "Runs complex analytical queries to optimize future supply chain routes.",
-      "Serves as the foundational training data source for Vertex AI models."
+      "Historical telemetry warehouse powering the conversational analytics dashboard.",
+      "Users query fleet data in plain English — AI generates SQL and returns visual charts.",
+      "BigQuery ML runs ARIMA forecasts to predict future cold-chain failures."
     ],
   },
   {
     id: "firestore",
-    title: "Firestore",
+    title: "Cloud Firestore",
+    subtitle: "Real-Time NoSQL Database",
     icon: Flame,
-    color: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-    glowColor: "shadow-[0_0_30px_rgba(245,158,11,0.5)]",
-    description: "Real-Time Synchronization",
+    color: "bg-[#EA4335]/10 text-[#EA4335] border-[#EA4335]/30",
+    lightColor: "#EA4335",
+    glowColor: "shadow-[0_0_30px_rgba(234,67,53,0.4)]",
+    description: "Live State & Marketplace",
     details: [
-      "NoSQL database holding live operational state.",
-      "Instantly syncs truck locations, active distress bids, and agent actions to all web and mobile clients.",
-      "Provides sub-second latency for marketplace bidding."
+      "NoSQL database holding live operational state for all fleet vehicles.",
+      "Instantly syncs truck locations, active distress bids, and agent actions to all clients.",
+      "Provides sub-second latency for the wholesaler bidding marketplace."
     ],
   },
 ];
 
-export default function ArchitecturePage() {
+export default function CloudStackPage() {
   const [activeNode, setActiveNode] = useState<Node | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -105,36 +117,32 @@ export default function ArchitecturePage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden relative flex flex-col font-sans">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden relative flex flex-col font-sans">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-black to-black -z-10" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay -z-10"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(66,133,244,0.08),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgba(66,133,244,0.15),transparent_60%)] -z-10" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(175,82,222,0.06),transparent_60%)] dark:bg-[radial-gradient(circle,rgba(175,82,222,0.12),transparent_60%)] -z-10" />
       
-      {/* Navigation */}
-      <nav className="p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <Activity className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-            Annapurna <span className="font-light text-white/50">Architecture</span>
-          </span>
+      <FloatingNav activeTab="cloud-stack" />
+      
+      <main className="flex-1 flex flex-col lg:flex-row items-stretch max-w-7xl w-full mx-auto p-6 lg:p-12 gap-12 pt-28">
+        {/* Header */}
+        <div className="w-full lg:hidden text-center mb-8">
+          <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-3">Google Cloud Stack</h1>
+          <p className="text-[var(--text-secondary)] text-lg">Hover over each service to explore its role</p>
         </div>
-        <Link 
-          href="/" 
-          className="text-sm font-medium text-white/60 hover:text-white transition-colors flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full border border-white/10"
-        >
-          Return Home
-        </Link>
-      </nav>
 
-      <main className="flex-1 flex flex-col lg:flex-row items-stretch max-w-7xl w-full mx-auto p-6 lg:p-12 gap-12">
         {/* Left Column: Visual Diagram */}
         <div className="flex-1 flex items-center justify-center relative min-h-[600px]">
-          {/* Connecting Line underlying nodes */}
-          <div className="absolute left-12 top-12 bottom-12 w-1 bg-gradient-to-b from-blue-500/20 via-purple-500/20 to-amber-500/20 rounded-full hidden md:block" />
+          {/* Connecting Line */}
+          <div className="absolute left-12 top-12 bottom-12 w-[2px] bg-gradient-to-b from-[#4285F4]/20 via-[#AF52DE]/20 to-[#EA4335]/20 rounded-full hidden md:block" />
 
-          <div className="w-full flex flex-col gap-6 md:gap-12 relative z-10">
+          <div className="w-full flex flex-col gap-6 md:gap-10 relative z-10">
+            {/* Title - desktop only */}
+            <div className="hidden lg:block mb-4">
+              <h1 className="text-4xl font-bold text-[var(--text-primary)] mb-2">Google Cloud Stack</h1>
+              <p className="text-[var(--text-secondary)] text-base">The services powering Annapurna&apos;s autonomous logistics platform</p>
+            </div>
+
             {nodes.map((node, index) => {
               const isActive = activeNode?.id === node.id;
               const isAnyActive = activeNode !== null;
@@ -148,51 +156,56 @@ export default function ArchitecturePage() {
                   onMouseEnter={() => setActiveNode(node)}
                   onMouseLeave={() => setActiveNode(null)}
                   className={`
-                    relative flex items-center gap-6 p-4 rounded-2xl cursor-pointer transition-all duration-500
-                    ${isAnyActive && !isActive ? 'opacity-40 scale-95 blur-[1px]' : 'opacity-100 scale-100'}
+                    relative flex items-center gap-6 p-4 rounded-2xl cursor-pointer transition-all duration-500 glass
+                    ${isActive ? 'bg-[var(--fill-secondary)] shadow-lg scale-[1.02]' : ''}
+                    ${isAnyActive && !isActive ? 'opacity-40 scale-95' : 'opacity-100 scale-100'}
                   `}
                 >
-                  {/* Decorative Connection Dot */}
-                  <div className="hidden md:flex absolute left-[-42px] w-4 h-4 rounded-full bg-[#0a0a0a] border-2 border-white/20 items-center justify-center">
+                  {/* Connection Dot */}
+                  <div className="hidden md:flex absolute left-[-42px] w-4 h-4 rounded-full bg-[var(--bg-primary)] border-2 border-[var(--separator)] items-center justify-center">
                     {isActive && (
                       <motion.div 
                         layoutId="activeDot"
-                        className={`w-2 h-2 rounded-full ${node.color.split(' ')[1].replace('text-', 'bg-')}`} 
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: node.lightColor }}
                       />
                     )}
                   </div>
 
-                  {/* Icon Container */}
+                  {/* Icon */}
                   <motion.div
                     className={`
-                      w-20 h-20 rounded-2xl flex items-center justify-center border backdrop-blur-xl transition-all duration-300
+                      w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center border backdrop-blur-xl transition-all duration-300
                       ${node.color}
-                      ${isActive ? node.glowColor + ' border-opacity-100 scale-110' : 'border-opacity-30'}
+                      ${isActive ? node.glowColor + ' scale-110' : ''}
                     `}
                     animate={isActive ? {
                       y: [0, -5, 0],
                       transition: { repeat: Infinity, duration: 2, ease: "easeInOut" }
                     } : {}}
                   >
-                    <node.icon className={`w-10 h-10 ${isActive ? 'animate-pulse' : ''}`} />
+                    <node.icon className={`w-8 h-8 md:w-10 md:h-10 ${isActive ? 'animate-pulse' : ''}`} />
                   </motion.div>
 
                   {/* Title & Subtitle */}
                   <div className="flex-1">
-                    <h3 className={`text-2xl font-bold tracking-tight transition-colors duration-300 ${isActive ? 'text-white' : 'text-white/80'}`}>
+                    <h3 className={`text-xl md:text-2xl font-bold tracking-tight transition-colors duration-300 text-[var(--text-primary)]`}>
                       {node.title}
                     </h3>
-                    <p className={`text-sm font-medium mt-1 transition-colors duration-300 ${isActive ? node.color.split(' ')[1] : 'text-white/40'}`}>
+                    <p className="text-xs font-bold uppercase tracking-wider mt-1" style={{ color: node.lightColor }}>
+                      {node.subtitle}
+                    </p>
+                    <p className={`text-sm font-medium mt-1 text-[var(--text-tertiary)]`}>
                       {node.description}
                     </p>
                   </div>
 
-                  {/* Flow Arrow (except last) */}
+                  {/* Flow Arrow */}
                   {index < nodes.length - 1 && (
                     <motion.div 
                       animate={isActive ? { x: [0, 10, 0] } : {}}
                       transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="hidden md:flex absolute -bottom-10 left-10 text-white/20"
+                      className="hidden md:flex absolute -bottom-8 left-10 text-[var(--text-quaternary)]"
                     >
                       <ArrowRight className="w-5 h-5 rotate-90" />
                     </motion.div>
@@ -203,7 +216,7 @@ export default function ArchitecturePage() {
           </div>
         </div>
 
-        {/* Right Column: Detailed Info Panel */}
+        {/* Right Column: Detail Panel */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="relative h-[500px] w-full max-w-lg mx-auto">
             <AnimatePresence mode="wait">
@@ -214,18 +227,25 @@ export default function ArchitecturePage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.95 }}
                   transition={{ duration: 0.3 }}
-                  className="absolute inset-0 bg-white/[0.03] border border-white/10 rounded-3xl p-8 backdrop-blur-2xl shadow-2xl flex flex-col"
+                  className="absolute inset-0 glass border border-[var(--separator)] rounded-3xl p-8 backdrop-blur-2xl shadow-2xl flex flex-col"
                 >
-                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/5 mb-6 w-fit ${activeNode.color.split(' ')[0]} ${activeNode.color.split(' ')[1]}`}>
+                  <div 
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border mb-6 w-fit"
+                    style={{ 
+                      backgroundColor: `${activeNode.lightColor}10`, 
+                      borderColor: `${activeNode.lightColor}30`,
+                      color: activeNode.lightColor 
+                    }}
+                  >
                     <activeNode.icon className="w-5 h-5" />
                     <span className="text-sm font-semibold tracking-wide uppercase">{activeNode.title}</span>
                   </div>
                   
-                  <h2 className="text-3xl font-bold mb-4 text-white">
+                  <h2 className="text-3xl font-bold mb-4 text-[var(--text-primary)]">
                     {activeNode.description}
                   </h2>
                   
-                  <div className="h-px w-full bg-gradient-to-r from-white/20 to-transparent mb-6" />
+                  <div className="h-px w-full bg-[var(--separator)] mb-6" />
                   
                   <ul className="space-y-6 flex-1">
                     {activeNode.details.map((detail, idx) => (
@@ -234,9 +254,16 @@ export default function ArchitecturePage() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 + idx * 0.1 }}
-                        className="flex gap-4 items-start text-white/70 leading-relaxed"
+                        className="flex gap-4 items-start text-[var(--text-secondary)] leading-relaxed"
                       >
-                        <div className={`mt-1 rounded-full p-1 border border-white/10 ${activeNode.color.split(' ')[0]} ${activeNode.color.split(' ')[1]}`}>
+                        <div 
+                          className="mt-1 rounded-full p-1 border"
+                          style={{ 
+                            backgroundColor: `${activeNode.lightColor}10`, 
+                            borderColor: `${activeNode.lightColor}30`,
+                            color: activeNode.lightColor 
+                          }}
+                        >
                           <Zap className="w-3 h-3" />
                         </div>
                         <span className="text-sm md:text-base">{detail}</span>
@@ -244,14 +271,14 @@ export default function ArchitecturePage() {
                     ))}
                   </ul>
                   
-                  <div className="mt-8 flex items-center justify-between p-4 bg-black/40 rounded-xl border border-white/5">
+                  <div className="mt-8 flex items-center justify-between p-4 bg-[var(--fill-secondary)] rounded-xl border border-[var(--separator)]">
                     <div className="flex items-center gap-3">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                      <span className="text-xs font-mono text-white/50">Google Cloud Native</span>
+                      <ShieldCheck className="w-5 h-5 text-[#34A853]" />
+                      <span className="text-xs font-mono text-[var(--text-tertiary)]">Google Cloud Native</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Server className="w-5 h-5 text-blue-400" />
-                      <span className="text-xs font-mono text-white/50">99.99% Uptime</span>
+                      <Server className="w-5 h-5 text-[#4285F4]" />
+                      <span className="text-xs font-mono text-[var(--text-tertiary)]">99.99% Uptime</span>
                     </div>
                   </div>
                 </motion.div>
@@ -261,14 +288,14 @@ export default function ArchitecturePage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex flex-col items-center justify-center text-center border border-dashed border-white/10 rounded-3xl bg-white/[0.01]"
+                  className="absolute inset-0 flex flex-col items-center justify-center text-center border border-dashed border-[var(--separator)] rounded-3xl glass"
                 >
-                  <div className="w-20 h-20 mb-6 rounded-full bg-white/5 flex items-center justify-center">
-                    <Activity className="w-8 h-8 text-white/20" />
+                  <div className="w-20 h-20 mb-6 rounded-full bg-[var(--fill-secondary)] flex items-center justify-center">
+                    <Activity className="w-8 h-8 text-[var(--text-quaternary)]" />
                   </div>
-                  <h3 className="text-xl font-medium text-white/60 mb-2">Interactive Architecture</h3>
-                  <p className="text-white/40 max-w-[250px] text-sm">
-                    Hover over any component in the diagram to explore its role in the Annapurna platform.
+                  <h3 className="text-xl font-medium text-[var(--text-secondary)] mb-2">Interactive Cloud Stack</h3>
+                  <p className="text-[var(--text-tertiary)] max-w-[250px] text-sm">
+                    Hover over any component to explore how Google Cloud services power the Annapurna platform.
                   </p>
                 </motion.div>
               )}
