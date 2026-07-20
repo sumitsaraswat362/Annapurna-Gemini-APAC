@@ -6,6 +6,8 @@ import { ForecastDataPoint } from "../../lib/bigquery-client";
 import { Send, Bot, Database, BarChart3, AlertTriangle, Truck, Leaf, IndianRupee, CloudOff, Activity, Scale, Gavel } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const forecastData = [
   { day: 'Mon', riskLevel: 20, trucksAtRisk: 1 },
@@ -214,7 +216,9 @@ export default function AnalyticsDashboard() {
                           ? 'bg-blue-600 text-[var(--text-primary)] rounded-tr-sm' 
                           : 'bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] shadow-sm rounded-tl-sm'
                       }`}>
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                        <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -509,7 +513,7 @@ export default function AnalyticsDashboard() {
                       Legal Liability Report (Generative AI)
                     </h3>
                     <div className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)] leading-relaxed">
-                      <div className="whitespace-pre-wrap">{legalReport.report}</div>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{legalReport.report}</ReactMarkdown>
                     </div>
                   </div>
                 </motion.div>
