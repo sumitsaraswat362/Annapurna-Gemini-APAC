@@ -4,6 +4,62 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NegotiationPit from './NegotiationPit';
 
+// Simulated translations dictionary
+const translations: Record<string, Record<string, string>> = {
+  'English': {},
+  'Hindi': {
+    'Initializing Neural Routing Core...': 'न्यूरल रूटिंग कोर आरंभ किया जा रहा है...',
+    'Scanning active fleets...': 'सक्रिय बेड़े को स्कैन किया जा रहा है...',
+    'API connection failed. Running in mock offline mode.': 'API कनेक्शन विफल। मॉक ऑफलाइन मोड में चल रहा है।',
+    'Rerouting truck': 'ट्रक को फिर से रूट किया जा रहा है',
+    'temperature spike': 'तापमान में वृद्धि',
+    'road closure': 'सड़क बंद',
+    'market surge': 'बाजार में उछाल',
+    'Anomaly detected': 'विसंगति का पता चला',
+    'Evaluating situation': 'स्थिति का मूल्यांकन किया जा रहा है',
+    'Action taken': 'कार्रवाई की गई'
+  },
+  'Japanese': {
+    'Initializing Neural Routing Core...': 'ニューラルルーティングコアを初期化しています...',
+    'Scanning active fleets...': 'アクティブなフリートをスキャンしています...',
+    'API connection failed. Running in mock offline mode.': 'API接続に失敗しました。モックオフラインモードで実行中。',
+    'Rerouting truck': 'トラックのルートを変更しています',
+    'temperature spike': '温度スパイク',
+    'road closure': '通行止め',
+    'market surge': '市場の急騰',
+    'Anomaly detected': '異常が検出されました',
+    'Evaluating situation': '状況を評価中',
+    'Action taken': '行動を起こしました'
+  },
+  'Indonesian': {
+    'Initializing Neural Routing Core...': 'Menginisialisasi Inti Perutean Neural...',
+    'Scanning active fleets...': 'Memindai armada aktif...',
+    'API connection failed. Running in mock offline mode.': 'Koneksi API gagal. Berjalan dalam mode offline tiruan.',
+    'Rerouting truck': 'Mengubah rute truk',
+    'temperature spike': 'lonjakan suhu',
+    'road closure': 'penutupan jalan',
+    'market surge': 'lonjakan pasar',
+    'Anomaly detected': 'Anomali terdeteksi',
+    'Evaluating situation': 'Mengevaluasi situasi',
+    'Action taken': 'Tindakan diambil'
+  }
+};
+
+const translateText = (text: string, language: string) => {
+  if (language === 'English') return text;
+  
+  const dict = translations[language];
+  if (!dict) return text;
+
+  let translatedText = text;
+  for (const [key, value] of Object.entries(dict)) {
+    const regex = new RegExp(key, 'gi');
+    translatedText = translatedText.replace(regex, value);
+  }
+  
+  return translatedText;
+}
+
 const AgentControlCenter = () => {
   const [logs, setLogs] = useState<{ agent: string, message: string, type: string }[]>([]);
   const [liveLogs, setLiveLogs] = useState<{ agent: string, message: string, type: string }[]>([]);
@@ -11,10 +67,15 @@ const AgentControlCenter = () => {
   const [isLoading, setIsLoading] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // New states for the requested features
+  const [language, setLanguage] = useState('English');
+  const [emails, setEmails] = useState<{ to: string, subject: string, body: string, time: string }[]>([]);
+
   const fetchScenario = async () => {
     setIsLoading(true);
     setLiveLogs([]);
     setLogIndex(0);
+    setEmails([]);
     try {
       const res = await fetch('/api/nerve-center/feed');
       const data = await res.json();
@@ -33,9 +94,27 @@ const AgentControlCenter = () => {
   useEffect(() => {
     if (logs.length > 0 && logIndex < logs.length) {
       const timer = setTimeout(() => {
-        setLiveLogs(prev => [...prev, logs[logIndex]]);
+        const newLog = logs[logIndex];
+        setLiveLogs(prev => [...prev, newLog]);
+        
+        // Trigger simulated Email if DecisionAgent or NotificationAgent takes action
+        const messageLower = newLog.message.toLowerCase();
+        if (
+          newLog.agent === 'DecisionAgent' || newLog.agent === 'NotificationAgent' || newLog.type === 'action'
+        ) {
+          if (newLog.type === 'action' || messageLower.includes('reroute') || messageLower.includes('alert')) {
+            const newEmail = {
+              to: 'logistics.wholesaler@example.com',
+              subject: `Automated Fleet Alert: Action Required`,
+              body: `Our autonomous fleet monitoring system has detected an event: "${newLog.message}". A reroute or alternative action has been initiated to preserve supply chain integrity.`,
+              time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            };
+            setEmails(prev => [newEmail, ...prev]);
+          }
+        }
+
         setLogIndex(prev => prev + 1);
-      }, Math.random() * 150 + 50); // Random delay between 50ms and 200ms
+      }, Math.random() * 800 + 200);
       return () => clearTimeout(timer);
     }
   }, [logIndex, logs]);
@@ -67,13 +146,13 @@ const AgentControlCenter = () => {
       {/* Background Aura */}
       <div className="aura-orb aura-blue w-[70vw] h-[70vh] top-[-10%] left-[-10%]"></div>
       <div className="aura-orb aura-purple w-[50vw] h-[50vh] bottom-[-10%] right-[-10%]" style={{ animationDelay: '-5s' }}></div>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6 relative z-10">
         
         {/* Header */}
         <motion.header 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--separator)] pb-6"
+          className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[var(--separator)] pb-6"
         >
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent uppercase tracking-wider flex items-center gap-3">
@@ -83,7 +162,20 @@ const AgentControlCenter = () => {
             <p className="text-[var(--text-tertiary)] mt-1 text-sm tracking-widest">Autonomous Fleet Intelligence</p>
           </div>
           
-          <div className="flex gap-4 text-xs">
+          <div className="flex flex-wrap items-center gap-4 text-xs">
+            {/* Language Toggle */}
+            <div className="flex items-center gap-2 bg-white/5 border border-[var(--separator)] p-1 rounded-md backdrop-blur-md">
+              {['English', 'Hindi', 'Japanese', 'Indonesian'].map(lang => (
+                <button
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={`px-3 py-1.5 rounded transition-all duration-300 ${language === lang ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.3)]' : 'text-[var(--text-tertiary)] hover:text-white'}`}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+
             <div className="px-4 py-2 rounded-md bg-white/5 border border-[var(--separator)] backdrop-blur-md">
               <span className="text-[var(--text-tertiary)]">SYSTEM STATUS</span>
               <div className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-2 mt-1">
@@ -98,14 +190,14 @@ const AgentControlCenter = () => {
         </motion.header>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:min-h-[600px] lg:h-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Terminal View */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-2 relative min-h-[400px] rounded-xl glass shadow-[0_0_40px_rgba(6,182,212,0.15)] overflow-hidden flex flex-col"
+            className="lg:col-span-2 relative h-[450px] rounded-xl glass shadow-[0_0_40px_rgba(6,182,212,0.15)] overflow-hidden flex flex-col"
           >
             {/* Terminal Header */}
             <div className="h-10 bg-[var(--fill-secondary)]/90 border-b border-[var(--separator)] flex items-center px-4 justify-between backdrop-blur-md">
@@ -147,7 +239,7 @@ const AgentControlCenter = () => {
                       [{log.agent}]
                     </span>
                     <span className={`${getColor(log.type, log.agent)}`}>
-                      {log.message}
+                      {translateText(log.message, language)}
                     </span>
                   </motion.div>
                 ))}
@@ -170,7 +262,7 @@ const AgentControlCenter = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-6 h-[450px]"
           >
             {/* Quick Metrics */}
             <div className="rounded-xl glass p-5 space-y-4">
@@ -201,27 +293,94 @@ const AgentControlCenter = () => {
             </div>
 
             {/* Active Protocols */}
-            <div className="rounded-xl glass p-5 flex-1 flex flex-col font-sans">
-              <h3 className="text-xs text-[var(--text-tertiary)] tracking-widest uppercase mb-4">Active Protocols</h3>
+            <div className="rounded-xl glass p-5 flex-1 flex flex-col font-sans overflow-hidden">
+              <h3 className="text-xs text-[var(--text-tertiary)] tracking-widest uppercase mb-4 shrink-0">Active Protocols</h3>
               
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-2">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
-                  <span className="text-red-400">Emergency Reroute (TRK-007)</span>
+                  <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse shrink-0" />
+                  <span className="text-red-400 truncate">Emergency Reroute (TRK-007)</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <span className="text-emerald-600 dark:text-emerald-400/80">Standard Telemetry</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] shrink-0" />
+                  <span className="text-emerald-600 dark:text-emerald-400/80 truncate">Standard Telemetry</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 text-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                  <span className="text-blue-600 dark:text-blue-400/80">Market Sync Protocol</span>
+                  <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] shrink-0" />
+                  <span className="text-blue-600 dark:text-blue-400/80 truncate">Market Sync Protocol</span>
                 </div>
               </div>
             </div>
           </motion.div>
           
         </div>
+
+        {/* Gmail Outbox Simulator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="rounded-xl glass shadow-[0_0_40px_rgba(16,185,129,0.1)] overflow-hidden flex flex-col min-h-[350px]"
+        >
+          <div className="h-12 bg-[var(--fill-secondary)]/90 border-b border-[var(--separator)] flex items-center px-6 justify-between backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+              <h3 className="text-sm font-semibold text-emerald-400 tracking-wider">Automated Email Logs (Workspace API)</h3>
+            </div>
+            <div className="text-xs text-[var(--text-tertiary)]">
+              {emails.length} Sent
+            </div>
+          </div>
+          <div className="p-6 overflow-y-auto flex-1 bg-black/20 custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
+            <AnimatePresence>
+              {emails.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="col-span-full h-full min-h-[200px] flex flex-col items-center justify-center text-[var(--text-tertiary)] italic gap-3 pb-8"
+                >
+                  <svg className="w-12 h-12 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Waiting for autonomous agents to trigger external communications...
+                </motion.div>
+              ) : (
+                emails.map((email, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="relative rounded-lg bg-gradient-to-b from-white/10 to-white/5 border border-white/10 p-5 shadow-lg backdrop-blur-md font-sans group hover:border-emerald-500/50 transition-colors h-fit"
+                  >
+                    <div className="absolute top-0 right-0 p-3">
+                      <div className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        GMAIL API
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="border-b border-white/5 pb-3">
+                        <div className="text-xs text-[var(--text-tertiary)]">To:</div>
+                        <div className="text-sm text-blue-300 truncate">{email.to}</div>
+                        <div className="text-xs text-[var(--text-tertiary)] mt-1">Subject:</div>
+                        <div className="text-sm font-semibold text-[var(--text-primary)]">{translateText(email.subject, language)}</div>
+                      </div>
+                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed italic">
+                        "{translateText(email.body, language)}"
+                      </div>
+                      <div className="pt-2 text-[10px] text-[var(--text-tertiary)] text-right">
+                        Sent autonomously at {email.time}
+                      </div>
+                    </div>
+                    {/* Glow effect on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none" />
+                  </motion.div>
+                ))
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
         
         {/* Active Negotiation Pit */}
         <NegotiationPit />
@@ -232,11 +391,12 @@ const AgentControlCenter = () => {
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(6, 182, 212, 0.2);
-          border-radius: 10px;
+          border-radius: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(6, 182, 212, 0.4);

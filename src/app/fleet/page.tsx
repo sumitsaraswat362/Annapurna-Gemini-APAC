@@ -291,6 +291,183 @@ export default function FleetApp() {
           </div>
         </div>
       </main>
+      <DriverVoiceWidget />
+    </div>
+  );
+}
+
+// ============================================================================
+// DIALOGFLOW CX DRIVER VOICE WIDGET
+// ============================================================================
+function DriverVoiceWidget() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [intentExtracted, setIntentExtracted] = useState(false);
+  const { dispatch } = useAppState();
+
+  const handleMicClick = () => {
+    if (isListening || transcript) {
+      setTranscript("");
+      setIntentExtracted(false);
+      setIsListening(false);
+      return;
+    }
+    
+    setIsListening(true);
+    setTranscript("");
+    setIntentExtracted(false);
+    
+    // Typing effect for transcript
+    const text = "I'm stuck in heavy rain on Highway 4, delaying ETA by 2 hours.";
+    let i = 0;
+    const typeInterval = setInterval(() => {
+      setTranscript(text.slice(0, i));
+      i++;
+      if (i > text.length) {
+        clearInterval(typeInterval);
+        setIsListening(false);
+        
+        setTimeout(() => {
+          setIntentExtracted(true);
+          dispatch({
+            type: "ADD_NOTIFICATION",
+            notification: {
+              id: `cx-${Date.now()}`,
+              type: "system",
+              title: "Route Delay (Dialogflow CX)",
+              message: "Driver reported heavy rain on Highway 4. ETA delayed by 120 mins.",
+              timestamp: Date.now(),
+              read: false,
+            }
+          });
+        }, 1500);
+      }
+    }, 50);
+  };
+
+  return (
+    <div className="fixed bottom-24 right-6 z-50 flex flex-col items-end pointer-events-none">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="mb-4 w-80 rounded-2xl overflow-hidden pointer-events-auto"
+            style={{
+              background: "linear-gradient(145deg, rgba(20,20,20,0.6) 0%, rgba(10,10,10,0.8) 100%)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.05)"
+            }}
+          >
+            <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-[#FF8C00] to-[#FF3B30] flex items-center justify-center shadow-lg">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-bold text-white tracking-tight">Dialogflow CX</h3>
+              </div>
+              <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest bg-white/10 px-2 py-1 rounded-full">Driver Comms</span>
+            </div>
+            
+            <div className="p-5 flex flex-col items-center">
+              <div className="relative mb-6">
+                <button 
+                  onClick={handleMicClick}
+                  className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl ${isListening ? 'bg-[#FF3B30] scale-110' : 'bg-gradient-to-br from-[#1A1A1A] to-[#2A2A2A] hover:bg-[#333] border border-white/10'}`}
+                >
+                  <svg className={`w-6 h-6 ${isListening ? 'text-white' : 'text-white/70'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                  </svg>
+                </button>
+                
+                {/* Sound wave animation */}
+                {isListening && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    {[1, 2, 3].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-16 h-16 rounded-full border-2 border-[#FF3B30]/50"
+                        animate={{ scale: [1, 2.5], opacity: [1, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.4 }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="w-full min-h-[60px] bg-black/30 rounded-xl p-3 border border-white/5 relative overflow-hidden">
+                {!transcript && !isListening && (
+                  <p className="text-xs text-white/40 text-center italic mt-3">Click mic to simulate driver report...</p>
+                )}
+                {transcript && (
+                  <p className="text-sm text-white/90 font-medium leading-relaxed">"{transcript}"</p>
+                )}
+                {isListening && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[#FF3B30] to-transparent opacity-50"></div>
+                )}
+              </div>
+
+              <AnimatePresence>
+                {intentExtracted && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                    className="w-full bg-[#007AFF]/10 border border-[#007AFF]/30 rounded-xl p-3 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <svg className="w-4 h-4 text-[#007AFF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                      </svg>
+                      <span className="text-[10px] font-bold text-[#007AFF] uppercase tracking-widest">Intent Extracted</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-black/20 rounded-md p-2 border border-white/5">
+                        <span className="text-white/40 block text-[9px] mb-0.5 uppercase">Intent</span>
+                        <span className="text-white font-mono text-[#34C759]">UpdateETA</span>
+                      </div>
+                      <div className="bg-black/20 rounded-md p-2 border border-white/5">
+                        <span className="text-white/40 block text-[9px] mb-0.5 uppercase">Entities</span>
+                        <span className="text-white font-mono text-[#FF9500]">Delay: 120m</span>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-[10px] text-[#007AFF] font-bold flex items-center justify-center gap-1 bg-[#007AFF]/10 rounded-md py-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#007AFF] animate-pulse"></span>
+                      Updating Fleet Map...
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="pointer-events-auto flex items-center justify-center w-14 h-14 rounded-full shadow-2xl transition-transform hover:scale-105 active:scale-95"
+        style={{
+          background: isOpen ? "rgba(255,59,48,0.9)" : "linear-gradient(135deg, #007AFF 0%, #AF52DE 100%)",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(255,255,255,0.2)",
+          color: "white"
+        }}
+      >
+        {isOpen ? (
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }

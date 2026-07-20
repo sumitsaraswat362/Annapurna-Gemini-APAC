@@ -15,7 +15,11 @@ import {
   Zap,
   Sparkles,
   ChevronRight,
-  Globe
+  Globe,
+  FileText,
+  Languages,
+  MessageSquare,
+  LayoutGrid
 } from "lucide-react";
 import { FloatingNav } from "@/components/landing/FloatingNav";
 import { FooterCTA } from "@/components/landing/FooterCTA";
@@ -113,6 +117,70 @@ const nodes: Node[] = [
       "Stores agent communication logs for the autonomous Nerve Center dashboard."
     ],
     stat: { label: "Sync Latency", value: "<50ms" },
+  },
+  {
+    id: "documentai",
+    title: "Document AI",
+    subtitle: "Google Cloud AI",
+    icon: FileText,
+    accent: "#4285F4",
+    gradient: "from-[#4285F4] to-[#1A73E8]",
+    glowShadow: "shadow-[0_8px_40px_rgba(66,133,244,0.35)]",
+    description: "Automated Document Processing",
+    details: [
+      "Extracts structured data from bills of lading and invoices.",
+      "Ensures regulatory compliance through automated verification.",
+      "Reduces manual data entry time by over 90%."
+    ],
+    stat: { label: "Docs/sec", value: "450" },
+  },
+  {
+    id: "translationapi",
+    title: "Translation API",
+    subtitle: "Google Cloud AI",
+    icon: Languages,
+    accent: "#EA4335",
+    gradient: "from-[#EA4335] to-[#D93025]",
+    glowShadow: "shadow-[0_8px_40px_rgba(234,67,53,0.35)]",
+    description: "Real-time Localization",
+    details: [
+      "Translates driver communications into local languages.",
+      "Supports 100+ languages for seamless regional operations.",
+      "Enables dynamic marketplace bidding across geographies."
+    ],
+    stat: { label: "Translations/min", value: "1,200" },
+  },
+  {
+    id: "dialogflow",
+    title: "Dialogflow CX",
+    subtitle: "Google Cloud Conversational AI",
+    icon: MessageSquare,
+    accent: "#34A853",
+    gradient: "from-[#34A853] to-[#1E8E3E]",
+    glowShadow: "shadow-[0_8px_40px_rgba(52,168,83,0.35)]",
+    description: "Virtual Dispatch Assistant",
+    details: [
+      "Handles tier-1 driver support and rerouting queries.",
+      "Uses intent recognition for rapid issue resolution.",
+      "Integrates with Gemini 2.5 Flash for complex reasoning."
+    ],
+    stat: { label: "Queries/hr", value: "5,000" },
+  },
+  {
+    id: "workspaceapi",
+    title: "Workspace API",
+    subtitle: "Google Workspace",
+    icon: LayoutGrid,
+    accent: "#FBBC04",
+    gradient: "from-[#FBBC04] to-[#F29900]",
+    glowShadow: "shadow-[0_8px_40px_rgba(251,188,4,0.35)]",
+    description: "Automated Reporting",
+    details: [
+      "Generates compliance reports in Google Docs.",
+      "Updates fleet metrics natively in Google Sheets.",
+      "Triggers emergency alerts via automated Gmail workflows."
+    ],
+    stat: { label: "Reports/day", value: "12,000" },
   },
 ];
 

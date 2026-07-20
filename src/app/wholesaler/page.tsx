@@ -6,18 +6,22 @@ import { Bid } from "@/lib/types";
 import CargoOfferCard from "@/components/CargoOfferCard";
 import { useAuth } from "@/lib/auth";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileText, ScanLine, UploadCloud, CheckCircle2, FileJson } from "lucide-react";
 
 export default function WholesalerDashboard() {
   const { state, dispatch } = useAppState();
-  const [activeTab, setActiveTab] = useState<"offers" | "orders" | "qa">("offers");
+  const [activeTab, setActiveTab] = useState<"offers" | "orders" | "qa" | "doc-ai">("offers");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ spoilagePercentage: number, reasoning: string } | null>(null);
+  const [isScanningDoc, setIsScanningDoc] = useState(false);
+  const [docResult, setDocResult] = useState<{ weight: string, tempRequired: string, price: string, date: string, type: string } | null>(null);
 
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
-      if (hash === "offers" || hash === "orders" || hash === "qa") {
-        setActiveTab(hash as "offers" | "orders" | "qa");
+      if (hash === "offers" || hash === "orders" || hash === "qa" || hash === "doc-ai") {
+        setActiveTab(hash as "offers" | "orders" | "qa" | "doc-ai");
       } else {
         setActiveTab("offers");
       }
@@ -27,7 +31,7 @@ export default function WholesalerDashboard() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const handleTabClick = (tab: "offers" | "orders" | "qa") => {
+  const handleTabClick = (tab: "offers" | "orders" | "qa" | "doc-ai") => {
     window.location.hash = tab;
   };
 
@@ -125,6 +129,21 @@ export default function WholesalerDashboard() {
     }
   };
 
+  const handleScanDoc = () => {
+    setIsScanningDoc(true);
+    setDocResult(null);
+    setTimeout(() => {
+      setIsScanningDoc(false);
+      setDocResult({
+        weight: "5000kg",
+        tempRequired: "-5°C",
+        price: "$12,000",
+        date: new Date().toLocaleDateString(),
+        type: "Bill of Lading"
+      });
+    }, 2500); // Simulate 2.5s scanning time
+  };
+
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] aura-container relative">
@@ -193,10 +212,10 @@ export default function WholesalerDashboard() {
         </div>
 
         {/* Segment Control (Tabs) */}
-        <div className="glass liquid-glass rounded-xl p-1 w-full max-w-sm mb-10 mx-auto md:mx-0 flex">
+        <div className="glass liquid-glass rounded-xl p-1 w-full max-w-lg mb-10 mx-auto md:mx-0 flex overflow-x-auto hide-scrollbar">
           <button
             onClick={() => handleTabClick("offers")}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all ${
+            className={`flex-1 min-w-[100px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === "offers" 
                 ? "bg-[var(--bg-primary)] shadow-md text-[var(--text-primary)]" 
                 : "text-[var(--text-secondary)] hover:bg-[var(--fill-tertiary)]"
@@ -211,7 +230,7 @@ export default function WholesalerDashboard() {
           </button>
           <button
             onClick={() => handleTabClick("orders")}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all ${
+            className={`flex-1 min-w-[100px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === "orders" 
                 ? "bg-[var(--bg-primary)] shadow-md text-[var(--text-primary)]" 
                 : "text-[var(--text-secondary)] hover:bg-[var(--fill-tertiary)]"
@@ -222,13 +241,23 @@ export default function WholesalerDashboard() {
           </button>
           <button
             onClick={() => handleTabClick("qa")}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all ${
+            className={`flex-1 min-w-[100px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === "qa" 
                 ? "bg-[var(--bg-primary)] shadow-md text-[var(--text-primary)]" 
                 : "text-[var(--text-secondary)] hover:bg-[var(--fill-tertiary)]"
             }`}
           >
             Vision QA
+          </button>
+          <button
+            onClick={() => handleTabClick("doc-ai")}
+            className={`flex-1 min-w-[100px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === "doc-ai" 
+                ? "bg-[var(--bg-primary)] shadow-md text-[var(--text-primary)]" 
+                : "text-[var(--text-secondary)] hover:bg-[var(--fill-tertiary)]"
+            }`}
+          >
+            Document AI
           </button>
         </div>
 
@@ -479,7 +508,7 @@ export default function WholesalerDashboard() {
               })}
             </div>
           </>
-        ) : (
+        ) : activeTab === "qa" ? (
           <div className="max-w-2xl mx-auto">
             {/* ===== QA TAB ===== */}
             <div className="glass liquid-glass rounded-[2rem] p-8 shadow-xl border border-[var(--separator)] relative overflow-hidden">
@@ -555,6 +584,143 @@ export default function WholesalerDashboard() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto">
+            {/* ===== DOCUMENT AI TAB ===== */}
+            <div className="glass liquid-glass rounded-[2rem] p-8 shadow-2xl border border-[var(--separator)] relative overflow-hidden">
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#34C759]/10 rounded-full blur-3xl"></div>
+              <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-[#007AFF]/10 rounded-full blur-3xl"></div>
+              
+              <div className="relative z-10">
+                <div className="text-center mb-10">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-[#34C759]/20 to-[#007AFF]/20 border border-[var(--separator)] flex items-center justify-center shadow-inner">
+                    <FileText className="w-10 h-10 text-[#34C759]" strokeWidth={1.5} />
+                  </div>
+                  <h2 className="text-3xl font-extrabold text-[var(--text-primary)] mb-3 bg-clip-text text-transparent bg-gradient-to-r from-[#007AFF] to-[#34C759]">
+                    Document AI Extraction
+                  </h2>
+                  <p className="text-[var(--text-secondary)] text-lg font-medium max-w-xl mx-auto">
+                    Instantly parse Invoices, Bills of Lading, and Manifests using advanced Vision OCR.
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center min-h-[400px] justify-center">
+                  <AnimatePresence mode="wait">
+                    {!docResult && !isScanningDoc ? (
+                      <motion.div 
+                        key="upload"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="w-full"
+                      >
+                        <div 
+                          onClick={handleScanDoc}
+                          className="border-2 border-dashed border-[var(--separator)] rounded-3xl p-12 flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF]/50 hover:bg-[#007AFF]/5 transition-all group backdrop-blur-sm bg-black/5 dark:bg-black/20"
+                        >
+                          <UploadCloud className="w-16 h-16 text-[var(--text-tertiary)] group-hover:text-[#007AFF] transition-colors mb-6" strokeWidth={1.5} />
+                          <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Upload Document</h3>
+                          <p className="text-sm text-[var(--text-secondary)] mb-6 text-center max-w-sm">
+                            Drag and drop your PDF or image here, or click to browse.
+                          </p>
+                          <button className="skeuomorphic-btn bg-gradient-to-r from-[#007AFF] to-[#34C759] text-white px-8 py-4 text-base font-bold shadow-lg shadow-[#007AFF]/20 rounded-xl">
+                            Select File
+                          </button>
+                        </div>
+                      </motion.div>
+                    ) : isScanningDoc ? (
+                      <motion.div
+                        key="scanning"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.05 }}
+                        className="w-full h-80 border border-[var(--separator)] rounded-3xl overflow-hidden relative flex flex-col items-center justify-center bg-black/5 dark:bg-black/40 backdrop-blur-md shadow-2xl"
+                      >
+                        <ScanLine className="w-20 h-20 text-[#34C759] mb-8" strokeWidth={1} />
+                        <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 animate-pulse">Extracting Data...</h3>
+                        <p className="text-sm text-[var(--text-secondary)]">Running OCR & Semantic Analysis</p>
+                        
+                        {/* Scanning Line Animation */}
+                        <motion.div 
+                          className="absolute left-0 right-0 h-1 bg-[#34C759] shadow-[0_0_20px_#34C759]"
+                          animate={{ top: ["0%", "100%", "0%"] }}
+                          transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#34C759]/10 to-transparent pointer-events-none" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="result"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full"
+                      >
+                        <div className="bg-white/50 dark:bg-black/40 backdrop-blur-xl border border-[var(--separator)] rounded-3xl p-8 shadow-2xl">
+                          <div className="flex items-center justify-between mb-8 pb-6 border-b border-[var(--separator)]">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-[#34C759]/20 flex items-center justify-center">
+                                <CheckCircle2 className="w-6 h-6 text-[#34C759]" />
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-[var(--text-primary)]">Extraction Complete</h3>
+                                <p className="text-sm text-[var(--text-secondary)]">Confidence Score: 99.2%</p>
+                              </div>
+                            </div>
+                            <span className="badge badge-safe text-sm px-3 py-1 shadow-sm">
+                              {docResult.type}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Total Weight</p>
+                              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{docResult.weight}</p>
+                            </div>
+                            <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Temp Required</p>
+                              <p className="font-mono text-2xl font-bold text-[#5AC8FA]">{docResult.tempRequired}</p>
+                            </div>
+                            <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Total Value</p>
+                              <p className="font-mono text-2xl font-bold text-[#34C759]">{docResult.price}</p>
+                            </div>
+                            <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Processed Date</p>
+                              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{docResult.date}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-[var(--fill-secondary)] border border-[var(--separator)] rounded-2xl p-5 mb-8 flex items-start gap-4">
+                            <FileJson className="w-6 h-6 text-[#FF9500] shrink-0 mt-1" />
+                            <div className="overflow-x-auto w-full">
+                              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-3 font-semibold">Raw JSON Payload</p>
+                              <pre className="text-xs font-mono text-[#007AFF] whitespace-pre-wrap">
+                                {JSON.stringify(docResult, null, 2)}
+                              </pre>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-4">
+                            <button 
+                              onClick={() => setDocResult(null)}
+                              className="flex-1 py-3 px-4 rounded-xl font-bold text-[var(--text-primary)] bg-[var(--fill-tertiary)] hover:bg-[var(--fill-secondary)] transition-colors border border-[var(--separator)]"
+                            >
+                              Scan Another
+                            </button>
+                            <button 
+                              className="flex-1 py-3 px-4 rounded-xl font-bold text-white shadow-lg shadow-[#007AFF]/20 bg-[#007AFF] hover:bg-[#007AFF]/90 transition-all"
+                            >
+                              Import to ERP
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </div>

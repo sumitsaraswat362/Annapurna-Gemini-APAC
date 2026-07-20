@@ -2,7 +2,8 @@ import { motion } from "motion/react";
 import { 
   Brain, Bot, Code, Database, LineChart, Camera, 
   Cloud, HardDrive, Cpu, Leaf, Wifi, Map, Activity, 
-  Search, Workflow, Zap, Network, Scale
+  Search, Workflow, Zap, Network, Scale,
+  FileText, Languages, MessageSquare, LayoutGrid
 } from "lucide-react";
 
 const features = [
@@ -131,6 +132,42 @@ const features = [
     color: "bg-pink-500/10 text-pink-500",
     badge: "Edge Computing",
     colSpan: "col-span-1 md:col-span-3 lg:col-span-4",
+  },
+  {
+    id: 15,
+    title: "Document AI",
+    description: "Automated processing of invoices, bills of lading, and compliance certificates using advanced OCR.",
+    icon: FileText,
+    color: "bg-blue-400/10 text-blue-400",
+    badge: "Google Cloud AI",
+    colSpan: "col-span-1 md:col-span-1 lg:col-span-1",
+  },
+  {
+    id: 16,
+    title: "Translation API",
+    description: "Real-time, multi-lingual support for regional drivers and farmers across diverse geographies.",
+    icon: Languages,
+    color: "bg-indigo-400/10 text-indigo-400",
+    badge: "Google Cloud AI",
+    colSpan: "col-span-1 md:col-span-1 lg:col-span-1",
+  },
+  {
+    id: 17,
+    title: "Dialogflow CX",
+    description: "Advanced conversational agent for managing driver queries and autonomous dispatch coordination.",
+    icon: MessageSquare,
+    color: "bg-teal-400/10 text-teal-400",
+    badge: "Conversational AI",
+    colSpan: "col-span-1 md:col-span-1 lg:col-span-1",
+  },
+  {
+    id: 18,
+    title: "Google Workspace API",
+    description: "Seamless integration with Docs, Sheets, and Gmail for automated reporting and notifications.",
+    icon: LayoutGrid,
+    color: "bg-green-500/10 text-green-500",
+    badge: "Workspace",
+    colSpan: "col-span-1 md:col-span-1 lg:col-span-1",
   },
 ];
 
