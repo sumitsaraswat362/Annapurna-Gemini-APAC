@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ai, DEFAULT_MODEL } from "@/lib/vertex-client";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -12,9 +12,6 @@ export async function POST(req: Request) {
       );
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const prompt = `Analyze this image of food/cargo for quality control.
 Assess if there is any spoilage, rot, or damage.
 Return a JSON object ONLY, with NO markdown formatting, with this exact structure:
@@ -23,50 +20,38 @@ Return a JSON object ONLY, with NO markdown formatting, with this exact structur
   "reasoning": string (brief explanation of what you see and why you gave that percentage)
 }`;
 
-    let result;
+    let base64Data = "";
+    let mimeType = "image/jpeg";
 
     if (image.startsWith('http://') || image.startsWith('https://')) {
-      // If it's a URL, we'd normally need to fetch it first since Gemini expects base64 for vision.
-      // But for hackathon/simplicity, let's fetch it and convert to base64.
       const imageResp = await fetch(image);
       const arrayBuffer = await imageResp.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const mimeType = imageResp.headers.get("content-type") || "image/jpeg";
-      
-      const imageParts = [
-        {
-          inlineData: {
-            data: buffer.toString("base64"),
-            mimeType
-          },
-        },
-      ];
-      
-      result = await model.generateContent([prompt, ...imageParts]);
+      base64Data = Buffer.from(arrayBuffer).toString("base64");
+      mimeType = imageResp.headers.get("content-type") || "image/jpeg";
     } else if (image.startsWith('data:image')) {
-      // Base64
-      const mimeType = image.split(';')[0].split(':')[1];
-      const base64Data = image.split(',')[1];
-      
-      const imageParts = [
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType
-          },
-        },
-      ];
-      
-      result = await model.generateContent([prompt, ...imageParts]);
+      mimeType = image.split(';')[0].split(':')[1];
+      base64Data = image.split(',')[1];
     } else {
-        return NextResponse.json(
-            { error: "Invalid image format. Must be a URL or data URI." },
-            { status: 400 }
-        );
+      return NextResponse.json(
+        { error: "Invalid image format. Must be a URL or data URI." },
+        { status: 400 }
+      );
     }
 
-    const responseText = result.response.text();
-    // Clean up response if the model added markdown blocks despite instructions
+    const response = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType, data: base64Data } }
+          ]
+        }
+      ]
+    });
+
+    const responseText = response.text || "";
     const cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
     
     let parsedResult;

@@ -1,18 +1,9 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { ai, DEFAULT_MODEL } from '@/lib/vertex-client';
 
 export async function POST(req: Request) {
   try {
     const { scenario } = await req.json().catch(() => ({ scenario: '15% rot detected in shipment' }));
-
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
-      generationConfig: {
-        responseMimeType: 'application/json',
-      }
-    });
 
     const prompt = `You are an orchestrator simulating a fierce but professional B2B negotiation between two AI agents:
 1. 'BuyerAgent': Represents the Wholesaler. They want a high penalty/discount due to issues with the shipment.
@@ -31,10 +22,15 @@ Return the result STRICTLY as JSON with the following schema:
   "finalPenaltyPercentage": number
 }`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-    
+    const result = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    const text = result.text || '';
     return NextResponse.json(JSON.parse(text));
   } catch (error) {
     console.error('Negotiation API error:', error);

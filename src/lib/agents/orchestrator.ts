@@ -1,8 +1,6 @@
 import { Cargo, Market, AIDecision } from "../types";
 import { makeDecision } from "../ai-agent";
-import { GoogleGenerativeAI, FunctionDeclaration, SchemaType } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { ai, DEFAULT_MODEL } from "../vertex-client";
 
 const rerouteTruckDeclaration: FunctionDeclaration = {
   name: "reroute_truck",
@@ -214,26 +212,51 @@ export async function runAutonomousCycle() {
   const alerts = await NotificationAgent.sendAlerts(evaluatedCargos);
   console.log(`[Orchestrator] Sent ${alerts.length} alerts.`);
 
-  console.log("[Orchestrator] Initiating True Function Calling test with Gemini...");
+  console.log("[Orchestrator] Initiating True Function Calling test with Gemini Enterprise / Vertex AI...");
   
-  const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-pro",
-    tools: [
-      {
-        functionDeclarations: [rerouteTruckDeclaration, alertWholesalerDeclaration],
-      },
-    ],
-  });
-
   const toolExecutions: any[] = [];
 
   for (const cargo of atRiskCargos) {
     const prompt = `Cargo ${cargo.id} (Truck ${cargo.truckId}) is at risk. SchemaType: ${cargo.type}. Temperature is ${cargo.telemetry.temperature}°C (Max safe: ${cargo.safeTemperatureMax}°C). Please reroute this truck to the nearest available market (e.g., "Okhla Sabzi Mandi") or alert the wholesaler that the cargo is spoiling.`;
 
     try {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const functionCalls = response.functionCalls();
+      const result = await ai.models.generateContent({
+        model: DEFAULT_MODEL,
+        contents: prompt,
+        config: {
+          tools: [
+            {
+              functionDeclarations: [
+                {
+                  name: "reroute_truck",
+                  description: "Reroute a truck to a new destination market.",
+                  parameters: {
+                    type: "OBJECT" as any,
+                    properties: {
+                      truckId: { type: "STRING" as any, description: "The ID of the truck to reroute" },
+                      destination: { type: "STRING" as any, description: "The name of the new destination market" },
+                    },
+                    required: ["truckId", "destination"],
+                  },
+                },
+                {
+                  name: "alert_wholesaler",
+                  description: "Send an alert message to the wholesaler.",
+                  parameters: {
+                    type: "OBJECT" as any,
+                    properties: {
+                      message: { type: "STRING" as any, description: "The message to send to the wholesaler" },
+                    },
+                    required: ["message"],
+                  },
+                }
+              ]
+            }
+          ]
+        }
+      });
+
+      const functionCalls = result.functionCalls;
 
       if (functionCalls && functionCalls.length > 0) {
         for (const call of functionCalls) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ai, DEFAULT_MODEL } from '@/lib/vertex-client';
 
 export async function POST(req: Request) {
   try {
@@ -29,30 +30,16 @@ Rules:
 3. If Temperature > Max Safe and Spoilage In <= ETA to Destination: recommendation is "emergency_sell".
 `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: systemPrompt }]
-        }],
-        generationConfig: {
-          temperature: 0.2,
-          responseMimeType: "application/json"
-        }
-      }),
+    const response = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: systemPrompt,
+      config: {
+        temperature: 0.2,
+        responseMimeType: "application/json"
+      }
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API error:', errorText);
-      return NextResponse.json({ error: 'Failed to fetch from Gemini' }, { status: 500 });
-    }
-
-    const data = await response.json();
-    const content = data.candidates[0].content.parts[0].text;
+    const content = response.text || "";
     
     try {
       const parsed = JSON.parse(content);

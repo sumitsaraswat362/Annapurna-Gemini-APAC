@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ai, DEFAULT_MODEL } from '@/lib/vertex-client';
 import { BigQueryService } from '@/lib/bigquery';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const bqService = new BigQueryService();
 
 export async function POST(req: Request) {
@@ -13,8 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // Step 1: Use Gemini to generate a mock SQL query and reasoning based on user input
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Step 1: Use Vertex AI to generate a mock SQL query and reasoning based on user input
     const prompt = `
       You are an AI Analyst Agent for a Cold Chain Logistics company.
       The user asks: "${message}"
@@ -28,8 +26,12 @@ export async function POST(req: Request) {
       }
     `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    const result = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: prompt,
+    });
+
+    const responseText = result.text || '';
     
     // Parse the JSON from the markdown block or direct output
     let parsedResponse;
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
         };
     }
 
-    // Step 2: Use the mock BigQuery service to get data
+    // Step 2: Use BigQuery service to get data
     const data = await bqService.query(parsedResponse.sql || message);
 
     // Return the summary and the data
