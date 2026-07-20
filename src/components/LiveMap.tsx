@@ -36,23 +36,29 @@ export default function LiveMap({
         const L = (await import("leaflet")).default;
         if (cancelled || !mapRef.current) return;
 
-        // Cleanup previous
-        if (mapInstanceRef.current) {
-          try { mapInstanceRef.current.remove(); } catch {}
-          mapInstanceRef.current = null;
+        // Initialize map only once
+        if (!mapInstanceRef.current) {
+          const map = L.map(mapRef.current, {
+            zoomControl: false,
+            attributionControl: false,
+          });
+          mapInstanceRef.current = map;
+
+          // Use OpenStreetMap tiles (fastest, most reliable)
+          L.tileLayer(
+            "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            { maxZoom: 18 }
+          ).addTo(map);
         }
 
-        const map = L.map(mapRef.current, {
-          zoomControl: false,
-          attributionControl: false,
-        });
-        mapInstanceRef.current = map;
-
-        // Use OpenStreetMap tiles (fastest, most reliable)
-        L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-          { maxZoom: 18 }
-        ).addTo(map);
+        const map = mapInstanceRef.current;
+        
+        // Remove old dynamic layers if we tracked them (or we can just track a single LayerGroup)
+        if (!map.dynamicLayers) {
+            map.dynamicLayers = L.layerGroup().addTo(map);
+        }
+        const layers = map.dynamicLayers;
+        layers.clearLayers();
 
         const makeIcon = (color: string, sz = 10) =>
           L.divIcon({
@@ -64,13 +70,13 @@ export default function LiveMap({
 
         // Origin (green)
         L.marker([origin.location.lat, origin.location.lng], { icon: makeIcon("#34C759") })
-          .addTo(map)
+          .addTo(layers)
           .bindTooltip(origin.name, { permanent: true, direction: "top", className: "lm-tip", offset: [0, -8] as any });
 
         // Destination (blue)
         if (destination?.location?.lat) {
           L.marker([destination.location.lat, destination.location.lng], { icon: makeIcon("#007AFF") })
-            .addTo(map)
+            .addTo(layers)
             .bindTooltip(destination.name, { permanent: true, direction: "top", className: "lm-tip", offset: [0, -8] as any });
         }
 
@@ -83,7 +89,7 @@ export default function LiveMap({
               : [[origin.location.lat, origin.location.lng]];
 
         if (pts.length > 1) {
-          L.polyline(pts, { color: "#34C759", weight: 3, opacity: 0.8 }).addTo(map);
+          L.polyline(pts, { color: "#34C759", weight: 3, opacity: 0.8 }).addTo(layers);
         }
 
         // Remaining route dashed
@@ -94,16 +100,16 @@ export default function LiveMap({
             if (d < nd) { nd = d; ni = i; }
           });
           const rem = pts.slice(ni);
-          if (rem.length > 1) L.polyline(rem, { color: "#007AFF", weight: 2, opacity: 0.5, dashArray: "8 6" }).addTo(map);
+          if (rem.length > 1) L.polyline(rem, { color: "#007AFF", weight: 2, opacity: 0.5, dashArray: "8 6" }).addTo(layers);
         }
 
         // Reroute
         if (reroute?.location?.lat) {
           L.marker([reroute.location.lat, reroute.location.lng], { icon: makeIcon("#FF3B30", 12) })
-            .addTo(map)
+            .addTo(layers)
             .bindTooltip(reroute.name, { permanent: true, direction: "right", className: "lm-tip-red", offset: [8, 0] as any });
           if (currentLocation?.lat)
-            L.polyline([[currentLocation.lat, currentLocation.lng], [reroute.location.lat, reroute.location.lng]], { color: "#FF3B30", weight: 3 }).addTo(map);
+            L.polyline([[currentLocation.lat, currentLocation.lng], [reroute.location.lat, reroute.location.lng]], { color: "#FF3B30", weight: 3 }).addTo(layers);
         }
 
         // Truck
@@ -114,7 +120,7 @@ export default function LiveMap({
               html: `<div style="width:14px;height:14px;background:${status === "emergency" ? "#FF3B30" : "#007AFF"};border-radius:50%;border:3px solid white;box-shadow:0 0 10px ${status === "emergency" ? "#FF3B30" : "#007AFF"}"></div>`,
               iconSize: [14, 14], iconAnchor: [7, 7],
             }),
-          }).addTo(map);
+          }).addTo(layers);
         }
 
         // Other Trucks
@@ -129,7 +135,7 @@ export default function LiveMap({
                 iconSize: [10, 10], iconAnchor: [5, 5],
               }),
             })
-            .addTo(map)
+            .addTo(layers)
             .bindTooltip(truck.truckPlate, { className: "lm-tip", offset: [0, -5] as any });
           }
         });
