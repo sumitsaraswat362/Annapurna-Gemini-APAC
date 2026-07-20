@@ -4,45 +4,47 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NegotiationPit from './NegotiationPit';
 
-const allLogs = [
-  { agent: 'System', message: 'Initializing Neural Routing Core...', type: 'system' },
-  { agent: 'MonitorAgent', message: 'Scanning 45 active trucks...', type: 'info' },
-  { agent: 'MonitorAgent', message: '⚠️ Anomaly detected on TRK-007 (Temp: 6°C). Passing context to DecisionAgent.', type: 'warning' },
-  { agent: 'DecisionAgent', message: 'Evaluating spoilage window. Spoilage in 45m. ETA 90m.', type: 'info' },
-  { agent: 'DecisionAgent', message: 'Initiating Emergency Reroute protocol.', type: 'critical' },
-  { agent: 'NotificationAgent', message: 'Dispatching alerts to 5 nearby wholesalers.', type: 'action' },
-  { agent: 'MarketAgent', message: 'Wholesaler-B accepted emergency bid at -15% margin.', type: 'success' },
-  { agent: 'System', message: 'Reroute confirmed. TRK-007 redirected to Wholesaler-B. Loss mitigated: $4,500.', type: 'success' },
-  { agent: 'MonitorAgent', message: 'Telemetry normalized for fleet subset A.', type: 'info' }
-];
-
 const AgentControlCenter = () => {
-  const [logs, setLogs] = useState<typeof allLogs>([]);
+  const [logs, setLogs] = useState<{ agent: string, message: string, type: string }[]>([]);
+  const [liveLogs, setLiveLogs] = useState<{ agent: string, message: string, type: string }[]>([]);
   const [logIndex, setLogIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const fetchScenario = async () => {
+    setIsLoading(true);
+    setLiveLogs([]);
+    setLogIndex(0);
+    try {
+      const res = await fetch('/api/nerve-center/feed');
+      const data = await res.json();
+      setLogs(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (logIndex < allLogs.length) {
+    fetchScenario();
+  }, []);
+
+  useEffect(() => {
+    if (logs.length > 0 && logIndex < logs.length) {
       const timer = setTimeout(() => {
-        setLogs(prev => [...prev, allLogs[logIndex]]);
+        setLiveLogs(prev => [...prev, logs[logIndex]]);
         setLogIndex(prev => prev + 1);
       }, Math.random() * 1500 + 500); // Random delay between 0.5s and 2s
       return () => clearTimeout(timer);
-    } else {
-        // loop back for demo after a pause
-        const timer = setTimeout(() => {
-           setLogIndex(0);
-           setLogs([]);
-        }, 5000);
-        return () => clearTimeout(timer);
     }
-  }, [logIndex]);
+  }, [logIndex, logs]);
 
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
-  }, [logs]);
+  }, [liveLogs]);
 
   const getColor = (type: string, agent: string) => {
     if (type === 'warning') return 'text-yellow-600 dark:text-yellow-400';
@@ -106,13 +108,22 @@ const AgentControlCenter = () => {
             className="lg:col-span-2 relative min-h-[400px] rounded-xl glass shadow-[0_0_40px_rgba(6,182,212,0.15)] overflow-hidden flex flex-col"
           >
             {/* Terminal Header */}
-            <div className="h-10 border-b border-cyan-500/20 bg-[var(--fill-secondary)]/90 border-b border-[var(--separator)] flex items-center px-4 justify-between backdrop-blur-md">
+            <div className="h-10 bg-[var(--fill-secondary)]/90 border-b border-[var(--separator)] flex items-center px-4 justify-between backdrop-blur-md">
               <div className="flex gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-red-500/80 transition-colors cursor-pointer" />
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-yellow-500/80 transition-colors cursor-pointer" />
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-700 hover:bg-green-500/80 transition-colors cursor-pointer" />
               </div>
-              <div className="text-xs text-cyan-500/50 tracking-widest uppercase font-sans">Multi-Agent Feed</div>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={fetchScenario}
+                  disabled={isLoading}
+                  className="text-xs text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 transition-colors disabled:opacity-50"
+                >
+                  {isLoading ? 'Generating...' : '↻ Generate Scenario'}
+                </button>
+                <div className="text-xs text-cyan-600/50 dark:text-cyan-400/50 tracking-widest uppercase font-sans">Multi-Agent Feed</div>
+              </div>
             </div>
 
             {/* Terminal Body */}
@@ -121,7 +132,7 @@ const AgentControlCenter = () => {
               className="p-4 overflow-y-auto flex-1 font-mono text-sm space-y-3 custom-scrollbar"
             >
               <AnimatePresence initial={false}>
-                {logs.map((log, i) => (
+                {liveLogs.map((log, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: -10 }}
