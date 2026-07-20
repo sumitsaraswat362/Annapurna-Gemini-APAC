@@ -2,40 +2,6 @@ import { Cargo, Market, AIDecision } from "../types";
 import { makeDecision } from "../ai-agent";
 import { ai, DEFAULT_MODEL } from "../vertex-client";
 
-const rerouteTruckDeclaration: FunctionDeclaration = {
-  name: "reroute_truck",
-  description: "Reroute a truck to a new destination market.",
-  parameters: {
-    type: SchemaType.OBJECT,
-    properties: {
-      truckId: {
-        type: SchemaType.STRING,
-        description: "The ID of the truck to reroute",
-      },
-      destination: {
-        type: SchemaType.STRING,
-        description: "The name of the new destination market",
-      },
-    },
-    required: ["truckId", "destination"],
-  },
-};
-
-const alertWholesalerDeclaration: FunctionDeclaration = {
-  name: "alert_wholesaler",
-  description: "Send an alert message to the wholesaler.",
-  parameters: {
-    type: SchemaType.OBJECT,
-    properties: {
-      message: {
-        type: SchemaType.STRING,
-        description: "The message to send to the wholesaler",
-      },
-    },
-    required: ["message"],
-  },
-};
-
 // Dummy local functions
 function reroute_truck(truckId: string, destination: string) {
   return `Successfully rerouted truck ${truckId} to ${destination}.`;
