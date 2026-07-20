@@ -45,8 +45,8 @@ Instead of a simple chatbot, Annapurna is powered by a distributed Multi-Agent S
 ### 2. Multi-Modal Vision & Document AI
 At delivery checkpoints, quality control is completely automated. We utilize **Gemini 1.5 Pro's Vision capabilities** to scan physical cargo images and instantly detect rot or spoilage percentages. Simultaneously, **Google Document AI** digitizes physical invoices, eliminating manual B2B data entry.
 
-### 3. Conversational BigQuery Analytics
-We transformed our data warehouse into a conversational engine. Fleet managers can type plain English queries (e.g., *"Which trucks spoiled this week?"*), and Gemini instantly generates the SQL, queries **BigQuery**, and renders beautiful predictive forecast charts.
+### 3. Conversational BigQuery Analytics & Predictive AI
+We transformed our data warehouse into a conversational engine. Fleet managers can type plain English queries (e.g., *"Which trucks spoiled this week?"*), and Gemini instantly generates the SQL, queries **BigQuery**, and renders beautiful predictive forecast charts. We've also integrated **Predictive AI Modeling** for ESG Metrics and future spoilage forecasting.
 
 ### 4. Voice AI & Localization (Dialogflow CX)
 To support diverse drivers across rural India, we integrated a **Dialogflow CX Voice widget** backed by the **Google Cloud Translation API**. This allows drivers to interact with cutting-edge AI dispatchers entirely via voice in regional languages like Hindi.
@@ -74,6 +74,7 @@ graph TD
     K --> G
 ```
 
+<div align="center">
   <img src="public/images/readme/fleet-dashboard-dark.png" width="100%" style="border-radius: 8px;">
 </div>
 
@@ -91,6 +92,27 @@ graph TD
 <div align="center">
   <img src="public/images/readme/wholesaler-dashboard-light.png" width="48%" style="border-radius: 8px;">
   <img src="public/images/readme/marketplace-activity-light.png" width="48%" style="border-radius: 8px;">
+</div>
+
+---
+
+## 📸 Latest Application Screenshots
+
+*Showcasing our newest features: The Nerve Center, Predictive Analytics, and Live Dashboard.*
+
+<div align="center">
+  <img src="public/images/readme/new-1.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-2.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-3.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-4.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-5.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-6.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-7.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-8.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-9.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-10.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-11.png" width="48%" style="border-radius: 8px; margin: 4px;">
+  <img src="public/images/readme/new-12.png" width="48%" style="border-radius: 8px; margin: 4px;">
 </div>
 
 ---
