@@ -1134,7 +1134,6 @@ function FleetTrackingView() {
                   })
                 )}
               </div>
-              </div>
             </div>
           </div>
         </div>
