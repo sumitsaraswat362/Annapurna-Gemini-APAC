@@ -512,7 +512,7 @@ export default function AnalyticsDashboard() {
                       <Scale className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                       Legal Liability Report (Generative AI)
                     </h3>
-                    <div className="prose prose-invert max-w-none text-sm text-[var(--text-secondary)] leading-relaxed">
+                    <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{legalReport.report}</ReactMarkdown>
                     </div>
                   </div>

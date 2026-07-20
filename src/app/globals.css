@@ -801,6 +801,27 @@ button:active:not(:disabled), .ios-card:active, .tactile-item:active {
 }
 
 /* ============================================================
+   TYPOGRAPHY PROSE OVERRIDES
+   ============================================================ */
+.prose {
+  --tw-prose-body: var(--text-primary);
+  --tw-prose-headings: var(--text-primary);
+  --tw-prose-links: var(--tint-blue);
+  --tw-prose-bold: var(--text-primary);
+  --tw-prose-counters: var(--text-tertiary);
+  --tw-prose-bullets: var(--text-tertiary);
+  --tw-prose-hr: var(--separator);
+  --tw-prose-quotes: var(--text-secondary);
+  --tw-prose-quote-borders: var(--separator);
+  --tw-prose-captions: var(--text-tertiary);
+  --tw-prose-code: var(--text-primary);
+  --tw-prose-pre-code: var(--text-primary);
+  --tw-prose-pre-bg: var(--bg-secondary);
+  --tw-prose-th-borders: var(--separator);
+  --tw-prose-td-borders: var(--separator);
+}
+
+/* ============================================================
    RESPONSIVE — Mobile bottom padding for tab bar
    ============================================================ */
 .has-tabbar {
