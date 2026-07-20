@@ -35,7 +35,7 @@ const AgentControlCenter = () => {
       const timer = setTimeout(() => {
         setLiveLogs(prev => [...prev, logs[logIndex]]);
         setLogIndex(prev => prev + 1);
-      }, Math.random() * 1500 + 500); // Random delay between 0.5s and 2s
+      }, Math.random() * 150 + 50); // Random delay between 50ms and 200ms
       return () => clearTimeout(timer);
     }
   }, [logIndex, logs]);
