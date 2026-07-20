@@ -1,7 +1,8 @@
 import { motion } from "motion/react";
 import { MouseEvent, useState } from "react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { Globe, ShieldAlert, Cpu, Leaf } from "lucide-react";
+import { Globe, ShieldAlert, Cpu, Leaf, Sparkles, Scale, Eye, Terminal, BarChart3, Wrench } from "lucide-react";
+import Link from "next/link";
 
 export function BentoGrid() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -146,6 +147,135 @@ export function BentoGrid() {
                 className="w-full h-full object-cover opacity-[0.15] dark:opacity-50 absolute inset-0 mix-blend-overlay"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-primary)] to-transparent" />
+          </div>
+        </motion.div>
+
+        {/* Box 5: Gemini 2.5 Flash */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(175,82,222,0.05)] dark:shadow-[0_20px_50px_rgba(175,82,222,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(175,82,222,0.08), transparent 40%)"
+               }} 
+          />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 bg-[#AF52DE]/10 rounded-xl flex items-center justify-center border border-[#AF52DE]/20 shadow-sm">
+                <Sparkles className="text-[#AF52DE] w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#AF52DE] bg-[#AF52DE]/10 px-3 py-1 rounded-full border border-[#AF52DE]/20">Vertex AI</span>
+            </div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Gemini 2.5 Flash</h3>
+            <p className="text-[var(--text-secondary)] font-medium text-sm">Real-time AI decisions powered by Google's fastest model. Sub-second spoilage prediction and autonomous rerouting.</p>
+          </div>
+        </motion.div>
+
+        {/* Box 6: Legal RAG Assistant */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(255,149,0,0.05)] dark:shadow-[0_20px_50px_rgba(255,149,0,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,149,0,0.08), transparent 40%)"
+               }} 
+          />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 bg-[#FF9500]/10 rounded-xl flex items-center justify-center border border-[#FF9500]/20 shadow-sm">
+                <Scale className="text-[#FF9500] w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#FF9500] bg-[#FF9500]/10 px-3 py-1 rounded-full border border-[#FF9500]/20">Gemini + RAG</span>
+            </div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Legal RAG Assistant</h3>
+            <p className="text-[var(--text-secondary)] font-medium text-sm">AI-powered legal compliance engine. Retrieves FSSAI regulations and generates definitive liability reports.</p>
+          </div>
+        </motion.div>
+
+        {/* Box 7: Vision AI Quality Control */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(90,200,250,0.05)] dark:shadow-[0_20px_50px_rgba(90,200,250,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(90,200,250,0.08), transparent 40%)"
+               }} 
+          />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 bg-[#5AC8FA]/10 rounded-xl flex items-center justify-center border border-[#5AC8FA]/20 shadow-sm">
+                <Eye className="text-[#5AC8FA] w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#5AC8FA] bg-[#5AC8FA]/10 px-3 py-1 rounded-full border border-[#5AC8FA]/20">Multi-Modal AI</span>
+            </div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Vision AI Quality Control</h3>
+            <p className="text-[var(--text-secondary)] font-medium text-sm">Multi-modal cargo inspection at delivery checkpoints. Camera-based spoilage detection using Gemini Vision.</p>
+          </div>
+        </motion.div>
+
+        {/* Box 8: Autonomous Nerve Center */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 md:col-span-2 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(0,122,255,0.05)] dark:shadow-[0_20px_50px_rgba(0,122,255,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(0,122,255,0.08), transparent 40%)"
+               }} 
+          />
+          <Link href="/nerve-center" className="absolute inset-0 z-20" aria-label="Nerve Center" />
+          <div className="relative z-10 flex flex-col h-full justify-between">
+            <div>
+              <div className="w-12 h-12 bg-[#007AFF]/10 rounded-xl flex items-center justify-center mb-6 border border-[#007AFF]/20 shadow-sm group-hover:scale-110 transition-transform">
+                <Terminal className="text-[#007AFF] w-6 h-6" />
+              </div>
+              <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2 group-hover:text-[#007AFF] transition-colors">Autonomous Nerve Center &rarr;</h3>
+              <p className="text-[var(--text-secondary)] font-medium max-w-lg">Watch AI agents communicate in real-time. MonitorAgent, DecisionAgent, and NotificationAgent orchestrate your supply chain.</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Box 9: BigQuery Analytics */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(52,199,89,0.05)] dark:shadow-[0_20px_50px_rgba(52,199,89,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(52,199,89,0.08), transparent 40%)"
+               }} 
+          />
+          <div className="relative z-10">
+            <div className="flex justify-between items-start mb-6">
+              <div className="w-12 h-12 bg-[#34C759]/10 rounded-xl flex items-center justify-center border border-[#34C759]/20 shadow-sm">
+                <BarChart3 className="text-[#34C759] w-6 h-6" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#34C759] bg-[#34C759]/10 px-3 py-1 rounded-full border border-[#34C759]/20">Google BigQuery</span>
+            </div>
+            <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">BigQuery Analytics</h3>
+            <p className="text-[var(--text-secondary)] font-medium text-sm">Natural language data queries. Ask your fleet questions in plain English and get instant SQL + visual charts.</p>
+          </div>
+        </motion.div>
+
+        {/* Box 10: Function Calling (AI Tools) */}
+        <motion.div 
+          variants={itemVariants}
+          className="col-span-1 md:col-span-2 glass bg-black/[0.03] dark:bg-black/0 rounded-[2rem] p-8 relative overflow-hidden group min-h-[300px] shadow-[0_20px_50px_rgba(255,59,48,0.05)] dark:shadow-[0_20px_50px_rgba(255,59,48,0.1)]"
+        >
+           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+               style={{
+                 background: "radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,59,48,0.08), transparent 40%)"
+               }} 
+          />
+          <div className="relative z-10">
+            <div className="w-12 h-12 bg-[#FF3B30]/10 rounded-xl flex items-center justify-center mb-6 border border-[#FF3B30]/20 shadow-sm">
+              <Wrench className="text-[#FF3B30] w-6 h-6" />
+            </div>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Function Calling (AI Tools)</h3>
+            <p className="text-[var(--text-secondary)] font-medium">Gemini agents execute real actions: reroute_truck(), alert_wholesaler(), scan_cargo(). True autonomous operations.</p>
           </div>
         </motion.div>
 
