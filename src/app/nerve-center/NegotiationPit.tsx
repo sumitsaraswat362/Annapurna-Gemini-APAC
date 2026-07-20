@@ -65,7 +65,7 @@ export default function NegotiationPit() {
   };
 
   return (
-    <div className="mt-8 rounded-xl bg-[var(--fill-secondary)]/70 border border-[var(--separator)] shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl overflow-hidden flex flex-col min-h-[400px]">
+    <div className="mt-8 rounded-xl bg-black/60 border border-white/10 shadow-[0_0_40px_rgba(217,70,239,0.15)] backdrop-blur-2xl overflow-hidden flex flex-col min-h-[400px]">
       {/* Header */}
       <div className="p-4 border-b border-[var(--separator)] flex items-center justify-between bg-white/5">
         <div>
