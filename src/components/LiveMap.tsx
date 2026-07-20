@@ -161,14 +161,17 @@ export default function LiveMap({
 
     initMap();
 
+  }, [origin?.location?.lat, origin?.location?.lng, destination?.location?.lat, destination?.location?.lng, currentLocation?.lat, status, reroute?.location?.lat, otherTrucks]);
+
+  // Clean up map only on unmount
+  useEffect(() => {
     return () => {
-      cancelled = true;
       if (mapInstanceRef.current) {
         try { mapInstanceRef.current.remove(); } catch {}
         mapInstanceRef.current = null;
       }
     };
-  }, [origin?.location?.lat, origin?.location?.lng, destination?.location?.lat, destination?.location?.lng, currentLocation?.lat, status, reroute?.location?.lat, otherTrucks]);
+  }, []);
 
   return (
     <div className="relative w-full h-full">

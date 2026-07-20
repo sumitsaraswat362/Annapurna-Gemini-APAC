@@ -369,20 +369,85 @@ function DashboardView() {
         </div>
       </div>
 
-      {/* Large visual placeholder for Dashboard */}
-      <div className="ios-card p-8 h-96 flex items-center justify-center relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#007AFF]/5 to-[#34C759]/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-        <div className="text-center relative z-10">
-          <div className="w-24 h-24 mx-auto bg-[var(--bg-primary)] rounded-3xl border border-[var(--separator)] flex items-center justify-center mb-6 shadow-lg">
-            <svg className="w-12 h-12 text-[#007AFF] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+      {/* Dynamic Network Topology Visualization */}
+      <div className="ios-card p-8 h-96 flex flex-col items-center justify-center relative overflow-hidden group bg-gradient-to-br from-[var(--bg-secondary)] to-[#007AFF]/5">
+        <h3 className="absolute top-6 left-6 text-xl font-bold text-[var(--text-primary)] mb-2 flex items-center gap-2">
+          <NavIcon icon="grid" className="w-5 h-5 text-[#007AFF]" />
+          Global Fleet Topology
+        </h3>
+        
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,122,255,0.05)_0%,transparent_70%)] pointer-events-none" />
+        
+        {/* Animated Nodes Network */}
+        <div className="relative w-full h-full flex items-center justify-center mt-6">
+          {/* Central AI Core */}
+          <motion.div 
+            animate={{ boxShadow: ['0 0 20px rgba(0,122,255,0.2)', '0 0 60px rgba(0,122,255,0.6)', '0 0 20px rgba(0,122,255,0.2)'] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute z-10 w-20 h-20 bg-gradient-to-br from-[#007AFF] to-[#34C759] rounded-2xl flex items-center justify-center shadow-2xl border border-white/20"
+          >
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Z" />
             </svg>
-          </div>
-          <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Network Topology Map</h3>
-          <p className="text-[var(--text-tertiary)] max-w-sm mx-auto">
-            Comprehensive multi-node visualization is disabled in demo mode. Switch to the Fleet Tracking tab to run the single-vehicle simulation.
-          </p>
+          </motion.div>
+
+          {/* Surrounding Nodes & Connections */}
+          {[...Array(6)].map((_, i) => {
+            const angle = (i * 60) * (Math.PI / 180);
+            const radius = 120;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            const isWarning = i === 2;
+
+            return (
+              <div key={i} className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {/* Connecting Line */}
+                <svg className="absolute w-full h-full overflow-visible z-0" style={{ transform: `rotate(${i * 60}deg)` }}>
+                  <line x1="50%" y1="50%" x2="50%" y2={`calc(50% - ${radius}px)`} stroke={isWarning ? "rgba(255,59,48,0.4)" : "rgba(0,122,255,0.2)"} strokeWidth="2" strokeDasharray="4 4" />
+                  
+                  {/* Flowing Data Packet */}
+                  <motion.circle 
+                    cx="50%" 
+                    cy="50%" 
+                    r="3" 
+                    fill={isWarning ? "#FF3B30" : "#007AFF"}
+                    animate={{ cy: [`50%`, `calc(50% - ${radius - 20}px)`], opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5 + (i * 0.2), repeat: Infinity, ease: "linear", delay: i * 0.5 }}
+                  />
+                </svg>
+
+                {/* Node */}
+                <motion.div
+                  initial={{ x: 0, y: 0, opacity: 0 }}
+                  animate={{ x, y, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: i * 0.1 }}
+                  className={`absolute z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 backdrop-blur-md ${isWarning ? 'bg-[#FF3B30]/10 border-[#FF3B30]/50' : 'bg-[var(--bg-primary)] border-[var(--separator)]'}`}
+                >
+                  <svg className={`w-5 h-5 ${isWarning ? 'text-[#FF3B30]' : 'text-[var(--text-tertiary)]'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
+                  </svg>
+                  {isWarning && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF3B30] rounded-full animate-ping"></span>
+                  )}
+                </motion.div>
+                
+                {/* Node Label */}
+                <motion.div
+                  initial={{ x: 0, y: 0, opacity: 0 }}
+                  animate={{ x: x, y: y + 35, opacity: 1 }}
+                  transition={{ duration: 0.8, delay: i * 0.1 }}
+                  className="absolute text-[10px] font-mono text-[var(--text-tertiary)] bg-[var(--bg-primary)] px-2 py-0.5 rounded-full border border-[var(--separator)]"
+                >
+                  HUB-{i+1}
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="absolute bottom-6 right-6 flex items-center gap-4 text-xs font-mono text-[var(--text-tertiary)]">
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#007AFF] animate-pulse"></span> SYNCING</span>
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#FF3B30] animate-pulse"></span> ANOMALY DETECTED</span>
         </div>
       </div>
     </div>
