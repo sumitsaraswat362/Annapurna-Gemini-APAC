@@ -3,105 +3,77 @@
   
   <br/>
   
-  <h1>Annapurna: Logistics Perfected by AI 🏔️</h1>
+  <h1>Annapurna Logistics 🏔️</h1>
   
   <p>
-    <strong>Minimizing waste. Maximizing efficiency. Saving the harvest.</strong>
+    <strong>Built for Google Cloud Gen AI Academy APAC</strong><br>
+    <em>Minimizing waste. Maximizing efficiency. Saving the harvest.</em>
   </p>
   
   <p>
-    <a href="#the-problem">The Problem</a> •
-    <a href="#the-gap">The Gap</a> •
-    <a href="#our-solution">Our Solution</a> •
+    <a href="#the-15-lakh-crore-crisis">The Problem</a> •
+    <a href="#our-autonomous-solution">Our Solution</a> •
     <a href="#key-features">Key Features</a> •
-    <a href="#gallery">Gallery</a>
+    <a href="#architecture">Google Cloud Stack</a>
   </p>
 </div>
 
 ---
 
-## 💔 The Problem: A Crisis in the Cold Chain
+## 💔 The ₹1.5 Lakh Crore Crisis
 
-Every year, up to **40% of food produced in emerging markets is wasted** before it ever reaches a plate. This isn't just an economic loss in the billions; it's a profound human crisis. 
+Every year, India loses over **₹1.5 Lakh Crore** to food wastage. The primary culprit? **Broken, fragmented logistics and compromised cold-chain integrity.**
 
-The primary culprit? **Broken, fragmented logistics and compromised cold chain integrity.**
+Traditional logistics fleets operate with blind spots. Drivers face unpredictable weather, severe traffic, and mechanical failures. By the time a refrigeration compressor fails on a transport truck, the damage is already done. The cargo spoils, the farmer loses their livelihood, and the wholesaler receives nothing. The current market relies on reactive telematics—telling managers a truck *has already broken down*. 
 
-Traditional logistics fleets operate with blind spots. Drivers face unpredictable weather, severe traffic, and mechanical failures. By the time a refrigeration compressor fails on a transport truck, the damage is already done. The cargo spoils, the farmer loses their livelihood, and the wholesaler receives nothing.
+## 💡 Our Autonomous Solution
 
-## 🕳️ The Gap: Reactive vs. Proactive
+**Annapurna** is an autonomous, multi-agent logistics ecosystem designed to eradicate food waste in transit. 
 
-Currently, the logistics market relies on **reactive systems**. Telematics tell a fleet manager that a truck's temperature *has already risen*, or that a truck *has already broken down*. 
-
-There is a massive gap in the market for an integrated, proactive solution that bridges **predictive fleet maintenance** with **real-time economic recovery**. What happens when a breakdown is inevitable? The food is simply thrown away.
-
-## 💡 Our Solution: Annapurna
-
-**Annapurna** is a next-generation, AI-driven logistics platform designed specifically to eradicate food waste in transit. 
-
-We don't just track trucks; we protect perishables. By leveraging cutting-edge LLMs (powered by Gemini) and real-time telemetry, Annapurna constantly monitors environmental conditions, vehicle health, and route efficiency to predict anomalies *before* they become disasters.
-
-But we didn't stop there. 
-
-If a truck suffers a critical cold-chain failure that cannot be mitigated, Annapurna instantly spins up an **Emergency Wholesaler Marketplace**. The platform geo-locates nearby wholesalers and allows them to bid on the distressed cargo at a discount. Instead of rotting on the highway, the food is rescued, the fleet recovers costs, and local markets get fresh produce. 
+We don't just track trucks; we actively protect perishables. By combining **Google Cloud IoT Edge Telemetry** with **Gemini 2.5 Multi-Agent Orchestration**, Annapurna continuously monitors environmental conditions. If our hardware detects a cooling failure, our AI autonomously calculates reroutes, alerts drivers in their native language, and opens an emergency bidding marketplace to sell the endangered cargo before it spoils.
 
 ---
 
-## ⚙️ How it Works: The Annapurna Workflow
+## ✨ Key Features (Gen AI Innovations)
+
+### 1. Multi-Agent Orchestration (The Nerve Center)
+Instead of a simple chatbot, Annapurna is powered by a distributed Multi-Agent System:
+*   **MonitorAgent:** Analyzes real-time IoT edge telemetry (Temp, Humidity, GPS) via Cloud Run.
+*   **DecisionAgent:** Powered by Vertex AI & Gemini Function Calling to calculate autonomous reroutes when anomalies are detected.
+*   **NotificationAgent:** Integrates with the **Google Workspace API** to dispatch Gmail alerts and push data to the marketplace.
+
+### 2. Multi-Modal Vision & Document AI
+At delivery checkpoints, quality control is completely automated. We utilize **Gemini 1.5 Pro's Vision capabilities** to scan physical cargo images and instantly detect rot or spoilage percentages. Simultaneously, **Google Document AI** digitizes physical invoices, eliminating manual B2B data entry.
+
+### 3. Conversational BigQuery Analytics
+We transformed our data warehouse into a conversational engine. Fleet managers can type plain English queries (e.g., *"Which trucks spoiled this week?"*), and Gemini instantly generates the SQL, queries **BigQuery**, and renders beautiful predictive forecast charts.
+
+### 4. Voice AI & Localization (Dialogflow CX)
+To support diverse drivers across rural India, we integrated a **Dialogflow CX Voice widget** backed by the **Google Cloud Translation API**. This allows drivers to interact with cutting-edge AI dispatchers entirely via voice in regional languages like Hindi.
+
+### 5. The Emergency Wholesaler Marketplace
+When a cold-chain failure is unavoidable, the AI pushes the distressed cargo to a live, geo-fenced smart marketplace. Nearby wholesalers can bid on the cargo instantly, ensuring the food is rescued and economic value is recovered for the farmers.
+
+---
+
+## ⚙️ Google Cloud Architecture
+
+Annapurna is built for enterprise scale, utilizing the full breadth of the Google Cloud ecosystem.
 
 ```mermaid
-sequenceDiagram
-    participant AI as AI System
-    participant FD as Fleet Command
-    participant M as Marketplace
-    participant W as Wholesaler
-
-    AI->>FD: ⚠️ Detects Anomaly (e.g., Temp > 18.5°C)
-    FD->>AI: Trigger Emergency SOS
-    AI->>FD: Auto-Dispatch Backup Refrigeration Unit
-    FD->>M: Push Cargo to Market (Set Floor Price)
-    M->>W: 🚨 Alert: Emergency Cargo Nearby
-    W->>M: 🤝 Places Partial Order (2.0T) & Counter-Bid
-    M->>FD: Forwards Custom Bid
-    FD->>M: Accepts Bid (Auto-fractions remaining inventory)
-    M->>W: Bid Accepted -> Opens GPS Navigation
-    W->>M: Arrives & Taps "Receive Order"
-    FD->>M: Confirms "Payment Cleared"
+graph TD
+    A[IoT Edge Sensors] -->|Telemetry| B(Cloud Run)
+    B --> C{Firestore Real-time DB}
+    C --> D[Multi-Agent Nerve Center]
+    D -->|Function Calling| E(Vertex AI / Gemini 2.5)
+    E --> F[Workspace API / Gmail]
+    E --> G[Wholesaler Marketplace]
+    C --> H[(BigQuery)]
+    H -->|Conversational SQL| I[Analytics Dashboard]
+    J[Cargo Images] --> K(Vision AI / Document AI)
+    K --> G
 ```
 
-## ✨ Key Features
-
-### 1. AI Fleet Command Center & Emergency SOS
-Monitor your entire fleet with real-time telemetry, GPS sync, and ambient temperature tracking. If Annapurna's predictive AI detects a critical anomaly (like a temperature spike above 18.5°C), it triggers an **Emergency SOS** that can instantly dispatch backup refrigeration units.
-
-### 2. The Emergency Wholesaler Marketplace
-When disaster strikes, the cargo doesn't have to die. Fleet managers can push stranded cargo to a live, geo-fenced marketplace. Crucially, they can enable advanced negotiation tools:
-- **Partial Orders:** Wholesalers can buy a fraction of the truckload (e.g., 2 tons out of 5), and the system automatically keeps the remaining inventory live.
-- **Counter-Bidding:** Wholesalers can negotiate custom pricing in real-time, ensuring maximum liquidity for distressed assets.
-
-### 3. Real-Time Tracking & Navigation
-Once a bid is accepted, wholesalers are granted access to a live tracking map with a "Truck Navigation" integration. This provides precise, turn-by-turn GPS routing directly to the stranded truck's coordinates on the highway.
-
-### 4. Beautiful, Accessible UI
-A premium, Apple HIG-inspired interface with seamless **Light and Dark Modes**. Whether you are a fleet manager working a night shift or a wholesaler in the bright sun, the UI adapts to your environment flawlessly.
-
----
-
-## 📸 Gallery
-
-We believe enterprise software should be as beautiful as it is functional. Here is a look at Annapurna in action.
-
-### 🌓 Adaptive Lighting (Light & Dark Mode)
-*Annapurna's stunning landing and login pages, built with glassmorphism and modern aesthetics.*
-
-<div align="center">
-  <img src="public/images/readme/landing-login-dark.png" width="48%" style="border-radius: 8px;">
-  <img src="public/images/readme/landing-login-light.png" width="48%" style="border-radius: 8px;">
-</div>
-
-### 🛰️ Fleet Operations Command
-*Real-time AI oversight. Track trucks, monitor compressor efficiency, and manage active consignments.*
-
-<div align="center">
   <img src="public/images/readme/fleet-dashboard-dark.png" width="100%" style="border-radius: 8px;">
 </div>
 
