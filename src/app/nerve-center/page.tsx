@@ -96,7 +96,7 @@ const AgentControlCenter = () => {
         </motion.header>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[75vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:min-h-[600px] lg:h-auto">
           
           {/* Terminal View */}
           <motion.div 

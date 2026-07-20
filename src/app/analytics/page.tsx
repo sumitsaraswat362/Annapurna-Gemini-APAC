@@ -41,11 +41,10 @@ export default function AnalyticsDashboard() {
   const [legalReport, setLegalReport] = useState<{ query: string; report: string; context: string } | null>(null);
   const [isLegalLoading, setIsLegalLoading] = useState(false);
 
-  const handleAnalyticsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const submitQuery = async (q: string) => {
+    if (!q.trim()) return;
 
-    const userMessage = { role: 'user' as const, content: query };
+    const userMessage = { role: 'user' as const, content: q };
     setMessages(prev => [...prev, userMessage]);
     setQuery("");
     setIsLoading(true);
@@ -76,26 +75,36 @@ export default function AnalyticsDashboard() {
     }
   };
 
-  const handleLegalSubmit = async (e: React.FormEvent) => {
+  const handleAnalyticsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!legalQuery.trim()) return;
+    submitQuery(query);
+  };
+
+  const submitLegalQuery = async (q: string) => {
+    if (!q.trim()) return;
     
+    setLegalQuery(q);
     setIsLegalLoading(true);
     setLegalReport(null);
     try {
       const response = await fetch('/api/rag/legal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: legalQuery })
+        body: JSON.stringify({ query: q })
       });
       const data = await response.json();
-      setLegalReport({ query: legalQuery, report: data.report, context: data.context });
+      setLegalReport({ query: q, report: data.report, context: data.context });
     } catch (error) {
       console.error(error);
-      setLegalReport({ query: legalQuery, report: "Error processing the legal query.", context: "" });
+      setLegalReport({ query: q, report: "Error processing the legal query.", context: "" });
     } finally {
       setIsLegalLoading(false);
     }
+  };
+
+  const handleLegalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    submitLegalQuery(legalQuery);
   };
 
   return (
@@ -183,10 +192,10 @@ export default function AnalyticsDashboard() {
                       <Bot className="w-12 h-12 mx-auto mb-3 opacity-20" />
                       <p>Ask a question about your logistics data.</p>
                       <div className="mt-4 flex flex-col gap-2">
-                        <button onClick={() => setQuery("Which trucks spoiled this week?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
+                        <button onClick={() => submitQuery("Which trucks spoiled this week?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
                           "Which trucks spoiled this week?"
                         </button>
-                        <button onClick={() => setQuery("Show me the coldest trucks")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
+                        <button onClick={() => submitQuery("Show me the coldest trucks")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
                           "Show me the coldest trucks"
                         </button>
                       </div>
@@ -440,10 +449,10 @@ export default function AnalyticsDashboard() {
                   <Gavel className="w-12 h-12 mx-auto mb-3 opacity-20" />
                   <p>Ask a compliance or liability query.</p>
                   <div className="mt-4 flex flex-col gap-2">
-                    <button onClick={() => setLegalQuery("What are the FSSAI compliance rules?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
+                    <button onClick={() => submitLegalQuery("What are the FSSAI compliance rules?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
                       "What are the FSSAI compliance rules?"
                     </button>
-                    <button onClick={() => setLegalQuery("TRK-007 spoiled, who pays?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
+                    <button onClick={() => submitLegalQuery("TRK-007 spoiled, who pays?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
                       "TRK-007 spoiled, who pays?"
                     </button>
                   </div>

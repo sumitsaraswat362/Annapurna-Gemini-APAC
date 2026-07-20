@@ -3,6 +3,7 @@ import { FloatingNav } from "./FloatingNav";
 import { FeatureShowcase } from "./FeatureShowcase";
 import { BentoGrid } from "./BentoGrid";
 import { FooterCTA } from "./FooterCTA";
+import { CloudArchitectureSection } from "./CloudArchitectureSection";
 
 export function LandingPage() {
   return (
@@ -18,6 +19,7 @@ export function LandingPage() {
         <div className="h-[10vh] w-full" />
         <FeatureShowcase />
         <BentoGrid />
+        <CloudArchitectureSection />
       </main>
       <FooterCTA />
     </div>
