@@ -103,7 +103,7 @@ const AgentControlCenter = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-2 relative min-h-[400px] rounded-xl bg-black/60 border border-cyan-500/20 shadow-[0_0_40px_rgba(6,182,212,0.15)] backdrop-blur-2xl overflow-hidden flex flex-col"
+            className="lg:col-span-2 relative min-h-[400px] rounded-xl glass shadow-[0_0_40px_rgba(6,182,212,0.15)] overflow-hidden flex flex-col"
           >
             {/* Terminal Header */}
             <div className="h-10 border-b border-cyan-500/20 bg-[var(--fill-secondary)]/90 border-b border-[var(--separator)] flex items-center px-4 justify-between backdrop-blur-md">
@@ -162,7 +162,7 @@ const AgentControlCenter = () => {
             className="flex flex-col gap-6"
           >
             {/* Quick Metrics */}
-            <div className="rounded-xl bg-black/40 border border-white/10 shadow-sm backdrop-blur-2xl p-5 space-y-4">
+            <div className="rounded-xl glass p-5 space-y-4">
               <h3 className="text-xs text-[var(--text-tertiary)] tracking-widest uppercase font-sans">Network Health</h3>
               
               <div className="space-y-4 font-sans">
@@ -190,7 +190,7 @@ const AgentControlCenter = () => {
             </div>
 
             {/* Active Protocols */}
-            <div className="rounded-xl bg-black/40 border border-white/10 shadow-sm backdrop-blur-2xl p-5 flex-1 flex flex-col font-sans">
+            <div className="rounded-xl glass p-5 flex-1 flex flex-col font-sans">
               <h3 className="text-xs text-[var(--text-tertiary)] tracking-widest uppercase mb-4">Active Protocols</h3>
               
               <div className="space-y-3">

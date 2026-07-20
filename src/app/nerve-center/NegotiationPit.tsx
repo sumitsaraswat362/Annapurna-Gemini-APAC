@@ -65,7 +65,7 @@ export default function NegotiationPit() {
   };
 
   return (
-    <div className="mt-8 rounded-xl bg-black/60 border border-white/10 shadow-[0_0_40px_rgba(217,70,239,0.15)] backdrop-blur-2xl overflow-hidden flex flex-col min-h-[400px]">
+    <div className="mt-8 rounded-xl glass shadow-[0_0_40px_rgba(217,70,239,0.15)] overflow-hidden flex flex-col min-h-[400px]">
       {/* Header */}
       <div className="p-4 border-b border-[var(--separator)] flex items-center justify-between bg-white/5">
         <div>
@@ -136,8 +136,8 @@ export default function NegotiationPit() {
                 </div>
                 <div className={`max-w-[80%] md:max-w-[70%] p-4 rounded-2xl backdrop-blur-md shadow-lg border leading-relaxed
                   ${isBuyer 
-                    ? 'bg-cyan-950/40 border-cyan-500/20 text-cyan-50 rounded-tl-sm' 
-                    : 'bg-amber-950/40 border-amber-500/20 text-amber-50 rounded-tr-sm'
+                    ? 'bg-cyan-500/10 dark:bg-cyan-950/40 border-cyan-500/20 text-cyan-900 dark:text-cyan-50 rounded-tl-sm' 
+                    : 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/20 text-amber-900 dark:text-amber-50 rounded-tr-sm'
                   }`}
                 >
                   {msg.message}
