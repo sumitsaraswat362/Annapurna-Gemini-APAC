@@ -1018,7 +1018,9 @@ function FleetTrackingView() {
                     )}
                   </div>
                 ))}
-                         {/* Feature 8: Predictive Fleet Maintenance AI */}
+              </div>
+            </div>
+            {/* Feature 8: Predictive Fleet Maintenance AI */}
             <div className="h-fit w-[300px] shrink-0 hidden lg:flex flex-col ios-card clay overflow-hidden">
               <div className="p-4 border-b border-[var(--separator)] bg-[#AF52DE]/5">
                 <h3 className="text-xs font-bold text-[#AF52DE] uppercase tracking-widest flex items-center gap-2">
@@ -1067,7 +1069,7 @@ function FleetTrackingView() {
                   })
                 )}
               </div>
-            </div>   </div>
+              </div>
             </div>
           </div>
         </div>
