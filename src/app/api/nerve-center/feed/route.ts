@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ai, DEFAULT_MODEL } from '@/lib/vertex-client';
 
-export const runtime = 'edge';
-
 export async function GET() {
   try {
     const prompt = `You are the backend logic for an autonomous "Nerve Center" dashboard that monitors a fleet of cold-chain logistics trucks.

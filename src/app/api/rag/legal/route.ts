@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { ai, DEFAULT_MODEL } from '@/lib/vertex-client';
 import { MockVectorDB } from '@/lib/rag-store';
 
-export const runtime = 'edge';
-
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
