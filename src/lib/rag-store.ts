@@ -13,7 +13,9 @@ Based on this context, answer the user's legal question accurately and professio
 
     const result = await ai.models.generateContent({
       model: DEFAULT_MODEL,
-      systemInstruction: systemPrompt,
+      config: {
+        systemInstruction: systemPrompt,
+      },
       contents: question,
     });
     

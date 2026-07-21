@@ -670,26 +670,26 @@ export default function WholesalerDashboard() {
                               </div>
                             </div>
                             <span className="badge badge-safe text-sm px-3 py-1 shadow-sm">
-                              {docResult.type}
+                              {docResult?.type}
                             </span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                             <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Total Weight</p>
-                              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{docResult.weight}</p>
+                              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{docResult?.weight}</p>
                             </div>
                             <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Temp Required</p>
-                              <p className="font-mono text-2xl font-bold text-[#5AC8FA]">{docResult.tempRequired}</p>
+                              <p className="font-mono text-2xl font-bold text-[#5AC8FA]">{docResult?.tempRequired}</p>
                             </div>
                             <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Total Value</p>
-                              <p className="font-mono text-2xl font-bold text-[#34C759]">{docResult.price}</p>
+                              <p className="font-mono text-2xl font-bold text-[#34C759]">{docResult?.price}</p>
                             </div>
                             <div className="bg-black/5 dark:bg-white/5 border border-[var(--separator)] p-5 rounded-2xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                               <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-1 font-semibold">Processed Date</p>
-                              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{docResult.date}</p>
+                              <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">{docResult?.date}</p>
                             </div>
                           </div>
                           

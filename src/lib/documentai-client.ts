@@ -23,7 +23,7 @@ export async function processDocument(fileBuffer: Buffer, mimeType: string): Pro
             type: 'OCR_PROCESSOR',
           }
         });
-        const [response] = await operation.promise();
+        const [response] = await (operation as any).promise ? await (operation as any).promise() : [operation];
         processor = response;
       }
       

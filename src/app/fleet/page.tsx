@@ -646,7 +646,7 @@ function FleetTrackingView() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [selectedCargoId, setSelectedCargoId] = useState<string>("cargo-001");
-  const selectedCargo = myCargos.find((c) => c.id === selectedCargoId);
+  const selectedCargo = myCargos.find((c) => c.id === selectedCargoId) || myCargos[0];
   const [emergencyTriggered, setEmergencyTriggered] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [qualityScore, setQualityScore] = useState<string | null>(null);
@@ -728,10 +728,11 @@ function FleetTrackingView() {
   }, [selectedCargo?.id, selectedCargo?.telemetry?.temperature, selectedCargo?.status]);
 
   const startSimulation = useCallback(() => {
-    if (intervalRef.current) return;
+    if (intervalRef.current || !selectedCargo?.id) return;
     dispatch({ type: "START_SIMULATION" });
 
     let step = 0;
+    const targetCargoId = selectedCargo.id;
     intervalRef.current = setInterval(async () => {
       if (step >= getTotalFrames()) {
         if (intervalRef.current) clearInterval(intervalRef.current);
@@ -739,32 +740,32 @@ function FleetTrackingView() {
       }
 
       const frame = getSimulationFrame(step);
-      dispatch({ type: "UPDATE_TELEMETRY", cargoId: "cargo-001", telemetry: frame });
+      dispatch({ type: "UPDATE_TELEMETRY", cargoId: targetCargoId, telemetry: frame });
 
       const spoilageMin = calculateSpoilageTime(frame.temperature, 10, frame.ethyleneLevel);
 
       if (frame.temperature > 10 && !emergencyTriggered) {
-        dispatch({ type: "UPDATE_CARGO_STATUS", cargoId: "cargo-001", status: "warning", spoilageMinutes: spoilageMin });
+        dispatch({ type: "UPDATE_CARGO_STATUS", cargoId: targetCargoId, status: "warning", spoilageMinutes: spoilageMin });
       }
 
       if (shouldTriggerEmergency(spoilageMin, 260) && !emergencyTriggered) {
         setEmergencyTriggered(true);
-        dispatch({ type: "UPDATE_CARGO_STATUS", cargoId: "cargo-001", status: "emergency", spoilageMinutes: spoilageMin });
+        dispatch({ type: "UPDATE_CARGO_STATUS", cargoId: targetCargoId, status: "emergency", spoilageMinutes: spoilageMin });
 
-        const cargo = state.cargos.find((c) => c.id === "cargo-001");
+        const cargo = state.cargos.find((c) => c.id === targetCargoId);
         if (cargo) {
           const updatedCargo = { ...cargo, telemetry: frame, status: "emergency" as const, spoilageTimeMinutes: spoilageMin };
           const decision = await makeDecision(updatedCargo);
           dispatch({ type: "ADD_AI_DECISION", decision });
-          dispatch({ type: "SET_ASKING_PRICE", cargoId: "cargo-001", pricePerKg: 16 });
-          dispatch({ type: "BROADCAST_TO_MARKETPLACE", cargoId: "cargo-001" });
+          dispatch({ type: "SET_ASKING_PRICE", cargoId: targetCargoId, pricePerKg: 16 });
+          dispatch({ type: "BROADCAST_TO_MARKETPLACE", cargoId: targetCargoId });
           dispatch({
             type: "ADD_NOTIFICATION",
             notification: {
               id: `notif-${Date.now()}`,
               type: "system",
               title: "🚨 Emergency Liquidation Mode",
-              message: "Cold chain failure on KA-01-AB-1234. AI recommending reroute to Kalyan Wholesale Market.",
+              message: `Cold chain failure on ${cargo.truckPlate}. AI recommending reroute.`,
               timestamp: Date.now(),
               read: false,
             },
@@ -775,7 +776,7 @@ function FleetTrackingView() {
       dispatch({ type: "ADVANCE_SIMULATION" });
       step++;
     }, 2000);
-  }, [dispatch, emergencyTriggered, state.cargos]);
+  }, [dispatch, emergencyTriggered, state.cargos, selectedCargo?.id]);
 
   useEffect(() => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
@@ -1049,8 +1050,17 @@ function FleetTrackingView() {
     );
   };
 
+  if (!selectedCargo) {
     return (
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 md:h-[100dvh] flex flex-col relative">
+      <div className="flex-1 flex flex-col items-center justify-center h-full min-h-[500px]">
+        <div className="w-8 h-8 border-4 border-[#007AFF] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-[var(--text-secondary)]">Initializing Fleet Data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 md:h-[100dvh] flex flex-col relative">
         {/* DELETE CONFIRMATION MODAL (Glassmorphism) */}
         <AnimatePresence>
           {deleteConfirmId && (
