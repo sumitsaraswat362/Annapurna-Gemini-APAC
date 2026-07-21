@@ -374,33 +374,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
           createdAt: Date.now()
         });
       } else if (action.type === 'TRIGGER_MANUAL_EMERGENCY') {
-        // Fetch current telemetry first
-        const cargoRef = doc(db, 'cargos', action.cargoId);
-        const cargoSnap = await getDoc(cargoRef);
-        if (cargoSnap.exists()) {
-          const data = cargoSnap.data();
-          await updateDoc(cargoRef, {
+        const cargo = state.cargos.find((c) => c.id === action.cargoId);
+        if (cargo) {
+          await setDoc(doc(db, 'cargos', action.cargoId), {
+            ...cargo,
             status: 'emergency',
-            telemetry: { ...data.telemetry, temperature: action.newTemperature }
-          });
+            telemetry: { ...cargo.telemetry, temperature: action.newTemperature }
+          }, { merge: true });
         }
       } else if (action.type === 'SET_ASKING_PRICE') {
-        await updateDoc(doc(db, 'cargos', action.cargoId), {
-          askingPricePerKg: action.pricePerKg
-        });
+        const cargo = state.cargos.find((c) => c.id === action.cargoId);
+        if (cargo) {
+          await setDoc(doc(db, 'cargos', action.cargoId), {
+            ...cargo,
+            askingPricePerKg: action.pricePerKg
+          }, { merge: true });
+        }
       } else if (action.type === 'BROADCAST_TO_MARKETPLACE') {
-        await updateDoc(doc(db, 'cargos', action.cargoId), {
-          status: 'emergency'
-        });
+        const cargo = state.cargos.find((c) => c.id === action.cargoId);
+        if (cargo) {
+          await setDoc(doc(db, 'cargos', action.cargoId), {
+            ...cargo,
+            status: 'emergency'
+          }, { merge: true });
+        }
       } else if (action.type === 'UPDATE_TELEMETRY') {
-        await updateDoc(doc(db, 'cargos', action.cargoId), {
-          telemetry: action.telemetry
-        });
+        const cargo = state.cargos.find((c) => c.id === action.cargoId);
+        if (cargo) {
+          await setDoc(doc(db, 'cargos', action.cargoId), {
+            ...cargo,
+            telemetry: action.telemetry
+          }, { merge: true });
+        }
       } else if (action.type === 'UPDATE_CARGO_STATUS') {
-        await updateDoc(doc(db, 'cargos', action.cargoId), {
-          status: action.status,
-          spoilageTimeMinutes: action.spoilageMinutes
-        });
+        const cargo = state.cargos.find((c) => c.id === action.cargoId);
+        if (cargo) {
+          await setDoc(doc(db, 'cargos', action.cargoId), {
+            ...cargo,
+            status: action.status,
+            spoilageTimeMinutes: action.spoilageMinutes
+          }, { merge: true });
+        }
       } else if (action.type === 'ADD_BID') {
         await setDoc(doc(db, 'bids', action.bid.id), {
           ...action.bid,
