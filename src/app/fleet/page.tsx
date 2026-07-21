@@ -80,16 +80,36 @@ export default function FleetApp() {
     try {
       const res = await fetch('/api/cron/ingest-telemetry');
       if (res.ok) {
-        addSystemLog("Successfully streamed 3 telemetry rows to BigQuery");
+        dispatch({
+          type: "ADD_NOTIFICATION",
+          notification: {
+            id: `bq-${Date.now()}`,
+            type: "system",
+            title: "BigQuery Sync",
+            message: "Successfully streamed 3 telemetry rows to BigQuery",
+            timestamp: Date.now(),
+            read: false,
+          }
+        });
       } else {
-        addSystemLog("Failed to stream to BigQuery", "error");
+        dispatch({
+          type: "ADD_NOTIFICATION",
+          notification: {
+            id: `bq-err-${Date.now()}`,
+            type: "alert",
+            title: "BigQuery Sync Failed",
+            message: "Failed to stream to BigQuery",
+            timestamp: Date.now(),
+            read: false,
+          }
+        });
       }
     } catch (e) {
-      addSystemLog("Error streaming to BigQuery", "error");
+      console.error(e);
     } finally {
       setIsStreamingBQ(false);
     }
-  }, [addSystemLog]);
+  }, [dispatch]);
 
   // Derived state for sidebar badges
   const emergencyCount = state.cargos.filter((c) => c.status === "emergency" || c.status === "rerouting").length;
