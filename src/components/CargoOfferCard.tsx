@@ -71,7 +71,7 @@ export default function CargoOfferCard({
           </div>
           <h3 className="text-lg font-semibold text-[#34C759] mb-1">Order Placed!</h3>
           <p className="text-sm text-[#8E8E93]">
-            {cargo.type.charAt(0).toUpperCase() + cargo.type.slice(1)} · Truck arriving in ~{etaMinutes} min
+            {(cargo.type || "cargo").charAt(0).toUpperCase() + (cargo.type || "cargo").slice(1)} · Truck arriving in ~{etaMinutes} min
           </p>
         </div>
       </div>
@@ -107,7 +107,7 @@ export default function CargoOfferCard({
         <div className="flex items-start justify-between mb-5">
           <div>
             <h3 className="text-xl font-bold text-[var(--text-primary)]">
-              {cargo.type.charAt(0).toUpperCase() + cargo.type.slice(1)}
+              {(cargo.type || "cargo").charAt(0).toUpperCase() + (cargo.type || "cargo").slice(1)}
               <span className="font-[family-name:var(--font-mono)] text-[var(--text-tertiary)] text-sm ml-2 font-semibold bg-[var(--fill-secondary)] px-2 py-1 rounded-md">
                 {(cargo.quantityKg / 1000).toFixed(0)} Tonnes
               </span>

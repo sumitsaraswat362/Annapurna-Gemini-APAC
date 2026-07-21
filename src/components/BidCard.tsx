@@ -50,10 +50,10 @@ export default function BidCard({ bid, onAccept, onReject, onCounter, onViewMap,
         <div className="flex items-center gap-3">
           {/* Avatar */}
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#007AFF]/20 to-[#AF52DE]/20 border border-[var(--separator)] flex items-center justify-center text-sm font-bold text-[#007AFF] shadow-sm">
-            {bid.wholesalerName.charAt(0)}
+            {(bid.wholesalerName || "W").charAt(0)}
           </div>
           <div>
-            <p className="text-sm font-bold text-[var(--text-primary)]">{bid.wholesalerName}</p>
+            <p className="text-sm font-bold text-[var(--text-primary)]">{bid.wholesalerName || "Wholesaler"}</p>
             <p className="text-xs font-medium text-[var(--text-secondary)] mt-0.5">
               {bid.distanceKm} km · {bid.etaMinutes} min away
             </p>

@@ -1589,7 +1589,7 @@ function MarketplaceView() {
                   >
                     <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center font-bold">
-                      {bid.wholesalerName.charAt(0).toUpperCase()}
+                      {(bid.wholesalerName || "W").charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <h3 className="font-bold text-base capitalize">{bid.wholesalerName}</h3>
@@ -1605,7 +1605,7 @@ function MarketplaceView() {
                       bid.status === 'counter_offered' ? 'badge-warning' :
                       'badge-info'
                     }`}>
-                      {bid.status === 'counter_offered' ? 'Counter Offer' : bid.status === 'payment_cleared' ? 'Payment Cleared' : bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                      {bid.status === 'counter_offered' ? 'Counter Offer' : bid.status === 'payment_cleared' ? 'Payment Cleared' : (bid.status || "pending").charAt(0).toUpperCase() + (bid.status || "pending").slice(1)}
                     </span>
                     <svg className={`w-5 h-5 text-[var(--text-tertiary)] transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -1663,7 +1663,7 @@ function MarketplaceView() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#007AFF]/10 text-[#007AFF] flex items-center justify-center font-bold text-xs">
-                        {bid.wholesalerName.charAt(0).toUpperCase()}
+                        {(bid.wholesalerName || "W").charAt(0).toUpperCase()}
                       </div>
                       <span className="font-medium capitalize">{bid.wholesalerName}</span>
                     </div>
@@ -1681,7 +1681,7 @@ function MarketplaceView() {
                       bid.status === 'counter_offered' ? 'badge-warning' :
                       'badge-info'
                     }`}>
-                      {bid.status === 'counter_offered' ? 'Counter Offer' : bid.status === 'payment_cleared' ? 'Payment Cleared' : bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                      {bid.status === 'counter_offered' ? 'Counter Offer' : bid.status === 'payment_cleared' ? 'Payment Cleared' : (bid.status || "pending").charAt(0).toUpperCase() + (bid.status || "pending").slice(1)}
                     </span>
                   </td>
                 </tr>

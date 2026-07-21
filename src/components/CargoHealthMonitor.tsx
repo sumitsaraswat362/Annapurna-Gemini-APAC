@@ -125,7 +125,7 @@ export default function CargoHealthMonitor({
                 : "text-[#34C759]"
             }`}
           >
-            {ethyleneLevel.toUpperCase()}
+            {(ethyleneLevel || "normal").toUpperCase()}
           </p>
         </div>
       </div>
