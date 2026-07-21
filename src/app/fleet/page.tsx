@@ -74,42 +74,7 @@ export default function FleetApp() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const [isStreamingBQ, setIsStreamingBQ] = useState(false);
-  const streamToBQ = useCallback(async () => {
-    setIsStreamingBQ(true);
-    try {
-      const res = await fetch('/api/cron/ingest-telemetry');
-      if (res.ok) {
-        dispatch({
-          type: "ADD_NOTIFICATION",
-          notification: {
-            id: `bq-${Date.now()}`,
-            type: "system",
-            title: "BigQuery Sync",
-            message: "Successfully streamed 3 telemetry rows to BigQuery",
-            timestamp: Date.now(),
-            read: false,
-          }
-        });
-      } else {
-        dispatch({
-          type: "ADD_NOTIFICATION",
-          notification: {
-            id: `bq-err-${Date.now()}`,
-            type: "alert",
-            title: "BigQuery Sync Failed",
-            message: "Failed to stream to BigQuery",
-            timestamp: Date.now(),
-            read: false,
-          }
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsStreamingBQ(false);
-    }
-  }, [dispatch]);
+
 
   // Derived state for sidebar badges
   const emergencyCount = state.cargos.filter((c) => c.status === "emergency" || c.status === "rerouting").length;
@@ -738,6 +703,43 @@ function FleetTrackingView() {
   const [isScanning, setIsScanning] = useState(false);
   const [qualityScore, setQualityScore] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [isStreamingBQ, setIsStreamingBQ] = useState(false);
+  const streamToBQ = useCallback(async () => {
+    setIsStreamingBQ(true);
+    try {
+      const res = await fetch('/api/cron/ingest-telemetry');
+      if (res.ok) {
+        dispatch({
+          type: "ADD_NOTIFICATION",
+          notification: {
+            id: `bq-${Date.now()}`,
+            type: "system",
+            title: "BigQuery Sync",
+            message: "Successfully streamed 3 telemetry rows to BigQuery",
+            timestamp: Date.now(),
+            read: false,
+          }
+        });
+      } else {
+        dispatch({
+          type: "ADD_NOTIFICATION",
+          notification: {
+            id: `bq-err-${Date.now()}`,
+            type: "alert",
+            title: "BigQuery Sync Failed",
+            message: "Failed to stream to BigQuery",
+            timestamp: Date.now(),
+            read: false,
+          }
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsStreamingBQ(false);
+    }
+  }, [dispatch]);
 
   // Modal States
   const [showAddModal, setShowAddModal] = useState(false);
