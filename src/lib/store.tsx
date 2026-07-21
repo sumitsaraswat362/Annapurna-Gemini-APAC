@@ -369,14 +369,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Persist state changes to localStorage
-  const isFirstRender = React.useRef(true);
+  // Persist state changes to localStorage safely
   React.useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    // Prevent overwriting a populated localStorage with an empty initial state on mount
+    if (state.cargos.length > 0 || state.bids.length > 0) {
+      localStorage.setItem('annapurna_state', JSON.stringify(state));
     }
-    localStorage.setItem('annapurna_state', JSON.stringify(state));
   }, [state]);
 
   // Middleware Dispatch to push to Supabase

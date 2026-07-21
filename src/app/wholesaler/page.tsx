@@ -38,7 +38,7 @@ export default function WholesalerDashboard() {
   const getAvailableQuantity = (cargoId: string, totalQty: number) => {
     const bidsForCargo = state.bids.filter(b => 
       b.cargoId === cargoId && 
-      (b.status === "pending" || b.status === "accepted" || b.status === "delivered" || b.status === "payment_cleared")
+      (b.status === "accepted" || b.status === "delivered" || b.status === "payment_cleared")
     );
     const orderedQty = bidsForCargo.reduce((sum, bid) => sum + bid.requestedQuantityKg, 0);
     return Math.max(0, totalQty - orderedQty);
