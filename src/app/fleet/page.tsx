@@ -768,20 +768,9 @@ function FleetTrackingView() {
             const res = await fetch('/api/ai-agent', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ cargo: updatedCargo, spoilageMinutes: spoilageMin }),
+              body: JSON.stringify({ cargo: updatedCargo }),
             });
-            const geminiResult = await res.json();
-            const nearestMarket = cargo.reroutableMarkets?.filter(m => m.etaMinutes < spoilageMin - 10).sort((a, b) => a.etaMinutes - b.etaMinutes)[0] || null;
-            decision = {
-              cargoId: cargo.id,
-              timestamp: Date.now(),
-              reasoning: geminiResult.reasoning || 'Emergency reroute triggered by AI.',
-              recommendation: geminiResult.recommendation || 'reroute',
-              suggestedMarket: nearestMarket,
-              estimatedRecoveryPercent: nearestMarket ? 80 : 20,
-              estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * (nearestMarket ? 0.8 : 0.2)),
-              confidence: geminiResult.confidence || 0.85,
-            };
+            decision = await res.json();
           } catch {
             // Deterministic fallback if API call fails
             const nearestMarket = cargo.reroutableMarkets?.filter(m => m.etaMinutes < spoilageMin - 10).sort((a, b) => a.etaMinutes - b.etaMinutes)[0] || null;
