@@ -4,7 +4,9 @@
 
 "use client";
 
-import React, { createContext, useContext, useReducer, ReactNode } from "react";
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from "react";
+import { db } from "./firebase";
+import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, query, writeBatch, getDocs, where, orderBy, getDoc } from "firebase/firestore";
 import {
   Cargo,
   Bid,
@@ -14,7 +16,6 @@ import {
   CargoStatus,
   Market,
 } from "./types";
-import { supabase } from "./supabase";
 
 // --- State Shape ---
 export interface AppState {
@@ -290,59 +291,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isInitialized = React.useRef(false);
 
   React.useEffect(() => {
-    // 1. Initial Fetch
-    const fetchInitialData = async () => {
-      const { data: cargos } = await supabase.from('cargos').select('*').order('created_at', { ascending: false });
-      const { data: bids } = await supabase.from('bids').select('*').order('created_at', { ascending: false });
-      
-      if (cargos) {
-        // Map db columns to camelCase
-        const mappedCargos = cargos.map(c => ({
-          ...c,
-          ownerId: c.telemetry?.ownerId,
-          truckPlate: c.truck_plate,
-          quantityKg: c.quantity_kg,
-          estimatedCargoValue: c.estimated_cargo_value,
-          safeTemperatureMax: c.safe_temperature_max,
-          spoilageTimeMinutes: c.spoilage_time_minutes,
-          originalDestination: c.original_destination,
-          askingPricePerKg: c.asking_price_per_kg,
-          selectedMarket: c.selected_market,
-          createdAt: c.created_at
-        }));
+    // 1. Real-time Subscriptions (Firebase)
+    // Firestore onSnapshot automatically fetches initial data AND listens for updates
+    const cargosRef = collection(db, 'cargos');
+    const bidsRef = collection(db, 'bids');
+
+    let unsubscribeCargos = () => {};
+    let unsubscribeBids = () => {};
+
+    try {
+      unsubscribeCargos = onSnapshot(query(cargosRef, orderBy('createdAt', 'desc')), (snapshot) => {
+        const mappedCargos = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id
+        })) as Cargo[];
         dispatch({ type: 'SET_CARGOS', cargos: mappedCargos });
-      }
-      if (bids) {
-        const mappedBids = bids.map(b => ({
-          ...b,
-          cargoId: b.cargo_id,
-          wholesalerId: b.wholesaler_id,
-          wholesalerName: b.wholesaler_name,
-          wholesalerLocation: b.wholesaler_location,
-          offeredPricePerKg: b.offered_price_per_kg,
-          requestedQuantityKg: b.requested_quantity_kg,
-          totalValue: b.total_value,
-          distanceKm: b.distance_km,
-          etaMinutes: b.eta_minutes,
-          counterPricePerKg: b.counter_price_per_kg,
-          expiresAt: b.expires_at ? new Date(b.expires_at).getTime() : Date.now() + 15 * 60000,
-          createdAt: b.created_at
-        }));
+      }, (err) => console.log("Firestore cargo sync error (fallback active)", err));
+
+      unsubscribeBids = onSnapshot(query(bidsRef, orderBy('createdAt', 'desc')), (snapshot) => {
+        const mappedBids = snapshot.docs.map(doc => ({
+          ...doc.data(),
+          id: doc.id
+        })) as Bid[];
         dispatch({ type: 'SET_BIDS', bids: mappedBids });
-      }
-    };
-    fetchInitialData();
+      }, (err) => console.log("Firestore bid sync error (fallback active)", err));
+    } catch (e) {
+      console.log("Firebase not configured correctly, relying on localStorage fallback.");
+    }
 
-    // 2. Real-time Subscriptions (if Supabase is configured)
-    const cargoSub = supabase.channel('cargos-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cargos' }, fetchInitialData)
-      .subscribe();
-
-    const bidSub = supabase.channel('bids-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, fetchInitialData)
-      .subscribe();
-
-    // 3. LocalStorage cross-tab sync (fallback for when Supabase is unconfigured)
+    // 2. LocalStorage cross-tab sync (fallback for when Firebase is unconfigured)
     const saved = localStorage.getItem('annapurna_state');
     if (saved) {
       try {
@@ -363,8 +340,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     window.addEventListener('storage', handleStorage);
 
     return () => {
-      supabase.removeChannel(cargoSub);
-      supabase.removeChannel(bidSub);
+      unsubscribeCargos();
+      unsubscribeBids();
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
@@ -380,77 +357,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
-  // Middleware Dispatch to push to Supabase
+  // Middleware Dispatch to push to Firestore
   const asyncDispatch = async (action: Action) => {
     dispatch(action); // Optimistic UI update
 
     try {
       if (action.type === 'ADD_CARGO') {
-        const { error } = await supabase.from('cargos').insert({
-          id: action.cargo.id,
-          truck_plate: action.cargo.truckPlate,
-          type: action.cargo.type,
-          quantity_kg: action.cargo.quantityKg,
-          estimated_cargo_value: action.cargo.estimatedCargoValue,
-          safe_temperature_max: action.cargo.safeTemperatureMax,
-          spoilage_time_minutes: action.cargo.spoilageTimeMinutes,
-          status: action.cargo.status,
-          origin: action.cargo.origin,
-          original_destination: action.cargo.originalDestination,
-          telemetry: { ...action.cargo.telemetry, ownerId: action.cargo.ownerId },
+        await setDoc(doc(db, 'cargos', action.cargo.id), {
+          ...action.cargo,
+          createdAt: Date.now()
         });
-        if (error) console.error("ADD_CARGO DB Error:", error.message, error.details, error.hint, error.code);
       } else if (action.type === 'TRIGGER_MANUAL_EMERGENCY') {
         // Fetch current telemetry first
-        const { data, error: selectErr } = await supabase.from('cargos').select('telemetry').eq('id', action.cargoId).single();
-        if (selectErr) console.error("TRIGGER_EMERGENCY Select Error:", selectErr.message);
-        if (data) {
-          const { error } = await supabase.from('cargos').update({
+        const cargoRef = doc(db, 'cargos', action.cargoId);
+        const cargoSnap = await getDoc(cargoRef);
+        if (cargoSnap.exists()) {
+          const data = cargoSnap.data();
+          await updateDoc(cargoRef, {
             status: 'emergency',
             telemetry: { ...data.telemetry, temperature: action.newTemperature }
-          }).eq('id', action.cargoId);
-          if (error) console.error("TRIGGER_EMERGENCY Update Error:", error.message);
+          });
         }
       } else if (action.type === 'SET_ASKING_PRICE') {
-        const { error } = await supabase.from('cargos').update({
-          asking_price_per_kg: action.pricePerKg
-        }).eq('id', action.cargoId);
-        if (error) console.error("SET_ASKING_PRICE Error:", error.message, error.details);
+        await updateDoc(doc(db, 'cargos', action.cargoId), {
+          askingPricePerKg: action.pricePerKg
+        });
       } else if (action.type === 'BROADCAST_TO_MARKETPLACE') {
-        const { error } = await supabase.from('cargos').update({
+        await updateDoc(doc(db, 'cargos', action.cargoId), {
           status: 'emergency'
-        }).eq('id', action.cargoId);
-        if (error) console.error("BROADCAST_TO_MARKETPLACE Error:", error.message, error.details);
+        });
       } else if (action.type === 'UPDATE_TELEMETRY') {
-        const { error } = await supabase.from('cargos').update({
+        await updateDoc(doc(db, 'cargos', action.cargoId), {
           telemetry: action.telemetry
-        }).eq('id', action.cargoId);
-        if (error) console.error("UPDATE_TELEMETRY Error:", error.message, error.details);
+        });
       } else if (action.type === 'UPDATE_CARGO_STATUS') {
-        const { error } = await supabase.from('cargos').update({
+        await updateDoc(doc(db, 'cargos', action.cargoId), {
           status: action.status,
-          spoilage_time_minutes: action.spoilageMinutes
-        }).eq('id', action.cargoId);
-        if (error) console.error("UPDATE_CARGO_STATUS Error:", error.message, error.details);
+          spoilageTimeMinutes: action.spoilageMinutes
+        });
       } else if (action.type === 'ADD_BID') {
-        await supabase.from('bids').insert({
-          id: action.bid.id,
-          cargo_id: action.bid.cargoId,
-          wholesaler_id: action.bid.wholesalerId,
-          wholesaler_name: action.bid.wholesalerName,
-          wholesaler_location: action.bid.wholesalerLocation,
-          offered_price_per_kg: action.bid.offeredPricePerKg,
-          requested_quantity_kg: action.bid.requestedQuantityKg,
-          total_value: action.bid.totalValue,
-          distance_km: action.bid.distanceKm,
-          eta_minutes: action.bid.etaMinutes,
-          status: action.bid.status
+        await setDoc(doc(db, 'bids', action.bid.id), {
+          ...action.bid,
+          createdAt: Date.now()
         });
       } else if (action.type === 'UPDATE_BID_STATUS') {
-        await supabase.from('bids').update({
-          status: action.status,
-          counter_price_per_kg: action.counterPrice
-        }).eq('id', action.bidId);
+        const updateData: any = { status: action.status };
+        if (action.counterPrice !== undefined) {
+          updateData.counterPricePerKg = action.counterPrice;
+        }
+        await updateDoc(doc(db, 'bids', action.bidId), updateData);
       } else if (action.type === 'ACCEPT_BID') {
         const bid = state.bids.find(b => b.id === action.bidId);
         const oldCargo = state.cargos.find(c => c.id === action.cargoId);
@@ -479,30 +434,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
             type: "wholesale_market" as const,
           };
 
+          const batch = writeBatch(db);
           // Accept the current bid
-          await supabase.from('bids').update({ status: 'accepted' }).eq('id', action.bidId);
+          batch.update(doc(db, 'bids', action.bidId), { status: 'accepted' });
           
           // If the cargo was fully bought out, reject other bids
           if (newQuantity <= 0) {
-            await supabase.from('bids').update({ status: 'rejected' }).eq('cargo_id', action.cargoId).neq('id', action.bidId);
+            const otherBidsSnap = await getDocs(query(collection(db, 'bids'), where('cargoId', '==', action.cargoId)));
+            otherBidsSnap.forEach(bDoc => {
+              if (bDoc.id !== action.bidId) {
+                batch.update(bDoc.ref, { status: 'rejected' });
+              }
+            });
           }
           
-          await supabase.from('cargos').update({
+          batch.update(doc(db, 'cargos', action.cargoId), {
             status: newStatus,
-            quantity_kg: newQuantity,
-            selected_market: newSelectedMarket,
-            original_destination: newOriginalDestination
-          }).eq('id', action.cargoId);
+            quantityKg: newQuantity,
+            selectedMarket: newSelectedMarket,
+            originalDestination: newOriginalDestination
+          });
+
+          await batch.commit();
         }
       } else if (action.type === 'MARK_DELIVERED') {
-        await supabase.from('cargos').update({ status: 'delivered' }).eq('id', action.cargoId);
+        await updateDoc(doc(db, 'cargos', action.cargoId), { status: 'delivered' });
       } else if (action.type === 'DELETE_CARGO') {
-        await supabase.from('cargos').delete().eq('id', action.cargoId);
-        // Optionally delete bids associated with the cargo
-        await supabase.from('bids').delete().eq('cargo_id', action.cargoId);
+        await deleteDoc(doc(db, 'cargos', action.cargoId));
+        // Also delete bids
+        const bidsSnap = await getDocs(query(collection(db, 'bids'), where('cargoId', '==', action.cargoId)));
+        const batch = writeBatch(db);
+        bidsSnap.forEach(bDoc => batch.delete(bDoc.ref));
+        await batch.commit();
       }
     } catch (err) {
-      console.error("Supabase Sync Error:", err);
+      console.error("Firestore Sync Error:", err);
     }
   };
 
