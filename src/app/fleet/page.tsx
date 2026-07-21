@@ -641,7 +641,14 @@ function FleetTrackingView() {
   
   // Only show cargos owned by this user
   // Exclude delivered cargos from active fleet view
-  const baseCargos = state.cargos.filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered");
+  const baseCargos = state.cargos
+    .filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered")
+    .map(c => ({
+      ...c,
+      origin: c.origin || { name: 'Distribution Hub', location: { lat: 19.99, lng: 73.78 } },
+      currentLocation: c.currentLocation || { lat: 19.99, lng: 73.78 },
+      telemetry: c.telemetry || { temperature: c.safeTemperatureMax - 2, humidity: 85, ethyleneLevel: "low", timestamp: Date.now() }
+    }));
   const myCargos = [...baseCargos, ...iotCargos];
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
