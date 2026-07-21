@@ -8,7 +8,11 @@ let _aiInstance: GoogleGenAI | null = null;
 export const ai = new Proxy({} as GoogleGenAI, {
   get(target, prop) {
     if (!_aiInstance) {
-      _aiInstance = new GoogleGenAI({});
+      if (process.env.GEMINI_API_KEY) {
+        _aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      } else {
+        _aiInstance = new GoogleGenAI({ vertexai: { project, location } });
+      }
     }
     return (_aiInstance as any)[prop];
   }

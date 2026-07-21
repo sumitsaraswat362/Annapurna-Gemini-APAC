@@ -199,6 +199,11 @@ function appReducer(state: AppState, action: Action): AppState {
     case "BROADCAST_TO_MARKETPLACE":
       return {
         ...state,
+        cargos: state.cargos.map((c) =>
+          c.id === action.cargoId
+            ? { ...c, status: "emergency" }
+            : c
+        ),
         notifications: [
           {
             id: `notif-broadcast-${Date.now()}`,
@@ -375,7 +380,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }).eq('id', action.cargoId);
         if (error) console.error("SET_ASKING_PRICE Error:", error.message, error.details);
       } else if (action.type === 'BROADCAST_TO_MARKETPLACE') {
-        // Notifications are handled locally or via alerts table
+        const { error } = await supabase.from('cargos').update({
+          status: 'emergency'
+        }).eq('id', action.cargoId);
+        if (error) console.error("BROADCAST_TO_MARKETPLACE Error:", error.message, error.details);
+      } else if (action.type === 'UPDATE_TELEMETRY') {
+        const { error } = await supabase.from('cargos').update({
+          telemetry: action.telemetry
+        }).eq('id', action.cargoId);
+        if (error) console.error("UPDATE_TELEMETRY Error:", error.message, error.details);
+      } else if (action.type === 'UPDATE_CARGO_STATUS') {
+        const { error } = await supabase.from('cargos').update({
+          status: action.status,
+          spoilage_time_minutes: action.spoilageMinutes
+        }).eq('id', action.cargoId);
+        if (error) console.error("UPDATE_CARGO_STATUS Error:", error.message, error.details);
       } else if (action.type === 'ADD_BID') {
         await supabase.from('bids').insert({
           id: action.bid.id,
