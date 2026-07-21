@@ -183,16 +183,16 @@ export default function AnalyticsDashboard() {
               <div className="lg:col-span-1 flex flex-col h-full bg-[var(--fill-secondary)]/70 border border-[var(--separator)] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl overflow-hidden shadow-2xl">
                 <div className="p-4 border-b border-[var(--separator)] bg-white/5">
                   <h2 className="font-medium flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    Ask Analyst AI
+                    <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    BigQuery Conversational Agent
                   </h2>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {messages.length === 0 && (
                     <div className="text-center text-[var(--text-secondary)] mt-10">
-                      <Bot className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                      <p>Ask a question about your logistics data.</p>
+                      <Database className="w-12 h-12 mx-auto mb-3 opacity-20 text-blue-400" />
+                      <p>Ask a natural language question. Gemini will generate SQL and query BigQuery directly.</p>
                       <div className="mt-4 flex flex-col gap-2">
                         <button onClick={() => submitQuery("Which trucks spoiled this week?")} className="text-xs bg-[var(--fill-secondary)] hover:bg-[var(--fill-tertiary)] text-[var(--text-primary)] border border-[var(--separator)] px-3 py-2 rounded-lg text-left transition-colors">
                           "Which trucks spoiled this week?"
@@ -240,7 +240,7 @@ export default function AnalyticsDashboard() {
                       type="text"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Ask about your fleet..."
+                      placeholder="Ask BigQuery..."
                       className="w-full bg-white/5 border border-[var(--separator)] rounded-xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-[var(--text-tertiary)]"
                     />
                     <button
@@ -269,7 +269,7 @@ export default function AnalyticsDashboard() {
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-lg font-medium flex items-center gap-2 text-[var(--text-primary)]">
                             <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            Generated Query
+                            Generated BigQuery SQL (Google Standard SQL)
                           </h3>
                         </div>
                         <div className="bg-[var(--fill-secondary)] rounded-xl p-4 border border-[var(--separator)] shadow-inner overflow-x-auto">
@@ -330,9 +330,9 @@ export default function AnalyticsDashboard() {
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center text-center opacity-40 bg-[var(--fill-secondary)]/70 border border-[var(--separator)] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl p-12 shrink-0 min-h-[250px] mb-6"
                   >
-                    <Bot className="w-16 h-16 mb-6 text-[var(--text-secondary)]" />
-                    <h2 className="text-2xl font-bold tracking-tight">AI Analyst Standby</h2>
-                    <p className="mt-2 text-lg">Ask a question to generate a report.</p>
+                    <Database className="w-16 h-16 mb-6 text-[var(--text-secondary)]" />
+                    <h2 className="text-2xl font-bold tracking-tight">BigQuery Agent Standby</h2>
+                    <p className="mt-2 text-lg">Ask a question to generate a BigQuery SQL report.</p>
                   </motion.div>
                 )}
 

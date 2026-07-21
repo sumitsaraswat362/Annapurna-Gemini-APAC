@@ -14,10 +14,19 @@ export async function POST(req: Request) {
 
     // Step 1: Use Vertex AI to generate a SQL query and reasoning based on user input
     const prompt = `
-      You are an AI Analyst Agent for a Cold Chain Logistics company.
+      You are an elite Google Cloud BigQuery Data Agent.
       The user asks: "${message}"
       
-      Generate a valid SQL query to answer this question from a 'telemetry' table.
+      Generate a valid Google Standard SQL query to answer this question.
+      
+      CRITICAL SCHEMA INFORMATION:
+      - The exact table you must query is: \`project-a9c284f8-6bca-440a-a0c.annapurna_telemetry.truck_telemetry\`
+      - Columns available: 
+        truck_id (STRING), truck_plate (STRING), driver_name (STRING), 
+        cargo_type (STRING), temperature_celsius (FLOAT64), humidity_percent (FLOAT64), 
+        ethylene_level (STRING), location_city (STRING), latitude (FLOAT64), 
+        longitude (FLOAT64), status (STRING), timestamp (TIMESTAMP)
+
       Also provide a brief summary answering the question.
       Format your response as a raw JSON object (without markdown blocks) like this:
       {
