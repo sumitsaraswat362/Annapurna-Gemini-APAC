@@ -1,28 +1,52 @@
-/**
- * Alert and State Management
- * 
- * State is currently managed via Supabase PostgreSQL.
- * These functions log actions for audit trail and can be 
- * wired to any backend (Supabase, Firestore, etc.)
- */
+import { Firestore, FieldValue } from '@google-cloud/firestore';
+
+const PROJECT_ID = process.env.GCP_PROJECT_ID || 'project-a9c284f8-6bca-440a-a0c';
+
+const getFirestore = () => {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    const credentials = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON, 'base64').toString());
+    return new Firestore({ projectId: PROJECT_ID, credentials });
+  }
+  return new Firestore({ projectId: PROJECT_ID });
+};
+
+const firestore = getFirestore();
 
 export async function saveAlert(alert: object): Promise<string> {
-  const id = `alert-${Date.now()}`;
-  console.log(`[AlertStore] Saved alert ${id}:`, JSON.stringify(alert).substring(0, 200));
-  return id;
+  const coll = firestore.collection('alerts');
+  const docRef = await coll.add({
+    ...alert,
+    timestamp: FieldValue.serverTimestamp(),
+  });
+  console.log(`[Firestore] Saved alert: ${docRef.id}`);
+  return docRef.id;
 }
 
 export async function saveCargoState(cargoId: string, state: object): Promise<void> {
-  console.log(`[CargoState] Updated ${cargoId}:`, JSON.stringify(state).substring(0, 200));
+  const docRef = firestore.collection('cargos').doc(cargoId);
+  await docRef.set({
+    ...state,
+    lastUpdated: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  console.log(`[Firestore] Updated cargo state: ${cargoId}`);
 }
 
 export async function getRecentAlerts(limit: number): Promise<any[]> {
-  console.log(`[AlertStore] Fetching ${limit} recent alerts`);
-  return [];
+  const coll = firestore.collection('alerts');
+  const snapshot = await coll.orderBy('timestamp', 'desc').limit(limit).get();
+  
+  const alerts: any[] = [];
+  snapshot.forEach(doc => alerts.push({ id: doc.id, ...doc.data() }));
+  
+  return alerts;
 }
 
 export async function saveMarketplaceListing(listing: object): Promise<string> {
-  const id = `listing-${Date.now()}`;
-  console.log(`[Marketplace] Saved listing ${id}:`, JSON.stringify(listing).substring(0, 200));
-  return id;
+  const coll = firestore.collection('marketplace_listings');
+  const docRef = await coll.add({
+    ...listing,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  console.log(`[Firestore] Saved listing: ${docRef.id}`);
+  return docRef.id;
 }

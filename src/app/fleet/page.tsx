@@ -74,6 +74,23 @@ export default function FleetApp() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
+  const [isStreamingBQ, setIsStreamingBQ] = useState(false);
+  const streamToBQ = useCallback(async () => {
+    setIsStreamingBQ(true);
+    try {
+      const res = await fetch('/api/cron/ingest-telemetry');
+      if (res.ok) {
+        addSystemLog("Successfully streamed 3 telemetry rows to BigQuery");
+      } else {
+        addSystemLog("Failed to stream to BigQuery", "error");
+      }
+    } catch (e) {
+      addSystemLog("Error streaming to BigQuery", "error");
+    } finally {
+      setIsStreamingBQ(false);
+    }
+  }, [addSystemLog]);
+
   // Derived state for sidebar badges
   const emergencyCount = state.cargos.filter((c) => c.status === "emergency" || c.status === "rerouting").length;
   const newBidsCount = state.bids.filter((b) => b.status === "pending").length;
@@ -1250,6 +1267,13 @@ function FleetTrackingView() {
             ) : (
               <><NavIcon icon="shield" className="w-4 h-4" /> Auto-Test Script</>
             )}
+          </button>
+          <button
+            onClick={streamToBQ}
+            disabled={isStreamingBQ}
+            className={`btn btn-sm ${isStreamingBQ ? "bg-blue-600/10 text-blue-500 cursor-not-allowed" : "bg-blue-600/10 text-blue-500 border border-blue-500/20 hover:bg-blue-600/20"}`}
+          >
+            {isStreamingBQ ? "Streaming..." : "Stream BQ Telemetry"}
           </button>
         </div>
       </header>
