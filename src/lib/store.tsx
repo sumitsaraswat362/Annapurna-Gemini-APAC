@@ -27,8 +27,10 @@ export interface AppState {
   simulationStep: number;
 }
 
+import { FLEET_CARGOS } from "@/data/mock-data";
+
 const initialState: AppState = {
-  cargos: [],
+  cargos: FLEET_CARGOS,
   bids: [],
   aiDecisions: [],
   notifications: [],
@@ -287,7 +289,7 @@ const AppContext = createContext<{
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, { ...initialState, cargos: [], bids: [] });
+  const [state, dispatch] = useReducer(appReducer, initialState);
   const isInitialized = React.useRef(false);
 
   React.useEffect(() => {
@@ -300,21 +302,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let unsubscribeBids = () => {};
 
     try {
-      unsubscribeCargos = onSnapshot(query(cargosRef, orderBy('createdAt', 'desc')), (snapshot) => {
-        const mappedCargos = snapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id
-        })) as Cargo[];
-        dispatch({ type: 'SET_CARGOS', cargos: mappedCargos });
-      }, (err) => console.log("Firestore cargo sync error (fallback active)", err));
+      unsubscribeCargos = onSnapshot(cargosRef, (snapshot) => {
+        if (!snapshot.empty) {
+          const mappedCargos = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+          })) as Cargo[];
+          dispatch({ type: 'SET_CARGOS', cargos: mappedCargos });
+        }
+      }, (err) => console.log("Firestore cargo sync error", err));
 
-      unsubscribeBids = onSnapshot(query(bidsRef, orderBy('createdAt', 'desc')), (snapshot) => {
-        const mappedBids = snapshot.docs.map(doc => ({
-          ...doc.data(),
-          id: doc.id
-        })) as Bid[];
-        dispatch({ type: 'SET_BIDS', bids: mappedBids });
-      }, (err) => console.log("Firestore bid sync error (fallback active)", err));
+      unsubscribeBids = onSnapshot(bidsRef, (snapshot) => {
+        if (!snapshot.empty) {
+          const mappedBids = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+          })) as Bid[];
+          dispatch({ type: 'SET_BIDS', bids: mappedBids });
+        }
+      }, (err) => console.log("Firestore bid sync error", err));
     } catch (e) {
       console.log("Firebase not configured correctly, relying on localStorage fallback.");
     }
