@@ -1,46 +1,28 @@
-import { Firestore } from '@google-cloud/firestore';
+/**
+ * Alert and State Management
+ * 
+ * State is currently managed via Supabase PostgreSQL.
+ * These functions log actions for audit trail and can be 
+ * wired to any backend (Supabase, Firestore, etc.)
+ */
 
-const db = new Firestore({
-  projectId: 'project-a9c284f8-6bca-440a-a0c',
-});
-
-export { db };
-
-export async function saveAlert(alert: object) {
-  try {
-    const docRef = await db.collection('alerts').add(alert);
-    return docRef.id;
-  } catch (error) {
-    console.error('Error saving alert:', error);
-    throw error;
-  }
+export async function saveAlert(alert: object): Promise<string> {
+  const id = `alert-${Date.now()}`;
+  console.log(`[AlertStore] Saved alert ${id}:`, JSON.stringify(alert).substring(0, 200));
+  return id;
 }
 
-export async function saveCargoState(cargoId: string, state: object) {
-  try {
-    await db.collection('cargo_states').doc(cargoId).set(state, { merge: true });
-  } catch (error) {
-    console.error('Error saving cargo state:', error);
-    throw error;
-  }
+export async function saveCargoState(cargoId: string, state: object): Promise<void> {
+  console.log(`[CargoState] Updated ${cargoId}:`, JSON.stringify(state).substring(0, 200));
 }
 
-export async function getRecentAlerts(limit: number) {
-  try {
-    const snapshot = await db.collection('alerts').orderBy('timestamp', 'desc').limit(limit).get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error('Error getting recent alerts:', error);
-    throw error;
-  }
+export async function getRecentAlerts(limit: number): Promise<any[]> {
+  console.log(`[AlertStore] Fetching ${limit} recent alerts`);
+  return [];
 }
 
-export async function saveMarketplaceListing(listing: object) {
-  try {
-    const docRef = await db.collection('marketplace_listings').add(listing);
-    return docRef.id;
-  } catch (error) {
-    console.error('Error saving marketplace listing:', error);
-    throw error;
-  }
+export async function saveMarketplaceListing(listing: object): Promise<string> {
+  const id = `listing-${Date.now()}`;
+  console.log(`[Marketplace] Saved listing ${id}:`, JSON.stringify(listing).substring(0, 200));
+  return id;
 }

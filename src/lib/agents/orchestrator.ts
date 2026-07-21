@@ -1,7 +1,6 @@
 import { Cargo, Market, AIDecision } from "../types";
 import { makeDecision } from "../ai-agent";
 import { ai, DEFAULT_MODEL } from "../vertex-client";
-import { saveAlert, saveCargoState } from "../firestore-client";
 
 // Tool implementations for Gemini Function Calling
 function reroute_truck(truckId: string, destination: string) {
@@ -128,11 +127,73 @@ class MonitorAgent {
 
 // 2. DecisionAgent
 class DecisionAgent {
-  static async evaluateCargos(cargos: Cargo[]): Promise<{ cargo: Cargo; decision: AIDecision }[]> {
+  static async evaluateCargos(cargos: Cargo[]): Promise<{ cargo: Cargo; decision: AIDecision; toolExecutions?: any[] }[]> {
     const results = [];
     for (const cargo of cargos) {
       const decision = await makeDecision(cargo);
-      results.push({ cargo, decision });
+      const toolExecutions: any[] = [];
+      
+      if (decision.recommendation !== "continue") {
+          const prompt = `Cargo ${cargo.id} (Truck ${cargo.truckId}) is at risk. SchemaType: ${cargo.type}. Temperature is ${cargo.telemetry.temperature}°C (Max safe: ${cargo.safeTemperatureMax}°C). Please reroute this truck to the nearest available market (e.g., "${decision.suggestedMarket?.name || "Okhla Sabzi Mandi"}") or alert the wholesaler that the cargo is spoiling.`;
+          try {
+              const result = await ai.models.generateContent({
+                  model: DEFAULT_MODEL,
+                  contents: prompt,
+                  config: {
+                      tools: [
+                          {
+                              functionDeclarations: [
+                                  {
+                                      name: "reroute_truck",
+                                      description: "Reroute a truck to a new destination market.",
+                                      parameters: {
+                                          type: "OBJECT" as any,
+                                          properties: {
+                                              truckId: { type: "STRING" as any, description: "The ID of the truck to reroute" },
+                                              destination: { type: "STRING" as any, description: "The name of the new destination market" },
+                                          },
+                                          required: ["truckId", "destination"],
+                                      },
+                                  },
+                                  {
+                                      name: "alert_wholesaler",
+                                      description: "Send an alert message to the wholesaler.",
+                                      parameters: {
+                                          type: "OBJECT" as any,
+                                          properties: {
+                                              message: { type: "STRING" as any, description: "The message to send to the wholesaler" },
+                                          },
+                                          required: ["message"],
+                                      },
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              });
+
+              const functionCalls = result.functionCalls;
+              if (functionCalls && functionCalls.length > 0) {
+                  for (const call of functionCalls) {
+                      console.log(`[Orchestrator][Nerve Center Log] Model triggered tool: ${call.name}`);
+                      let toolResult;
+                      if (call.name === "reroute_truck") {
+                          const args = call.args as any;
+                          toolResult = reroute_truck(args.truckId, args.destination);
+                      } else if (call.name === "alert_wholesaler") {
+                          const args = call.args as any;
+                          toolResult = alert_wholesaler(args.message);
+                      }
+                      console.log(`[Orchestrator][Nerve Center Log] Tool Execution Result: ${toolResult}`);
+                      toolExecutions.push({ name: call.name, args: call.args, result: toolResult });
+                  }
+              }
+          } catch (e) {
+              console.error("[Orchestrator] Error during function calling:", e);
+          }
+      }
+      
+      results.push({ cargo, decision, toolExecutions });
     }
     return results;
   }
@@ -155,8 +216,8 @@ class NotificationAgent {
         };
         alertsSent.push(alert);
         try {
-          await saveAlert(alert);
-          await saveCargoState(cargo.id, {
+          console.log("[Stub] saveAlert:", alert);
+          console.log("[Stub] saveCargoState:", cargo.id, {
             status: decision.recommendation,
             lastAlertTimestamp: alert.timestamp,
             activeAlert: alert.message
@@ -189,71 +250,7 @@ export async function runAutonomousCycle() {
   const alerts = await NotificationAgent.sendAlerts(evaluatedCargos);
   console.log(`[Orchestrator] Sent ${alerts.length} alerts.`);
 
-  console.log("[Orchestrator] Initiating True Function Calling test with Gemini Enterprise / Vertex AI...");
-  
-  const toolExecutions: any[] = [];
-
-  for (const cargo of atRiskCargos) {
-    const prompt = `Cargo ${cargo.id} (Truck ${cargo.truckId}) is at risk. SchemaType: ${cargo.type}. Temperature is ${cargo.telemetry.temperature}°C (Max safe: ${cargo.safeTemperatureMax}°C). Please reroute this truck to the nearest available market (e.g., "Okhla Sabzi Mandi") or alert the wholesaler that the cargo is spoiling.`;
-
-    try {
-      const result = await ai.models.generateContent({
-        model: DEFAULT_MODEL,
-        contents: prompt,
-        config: {
-          tools: [
-            {
-              functionDeclarations: [
-                {
-                  name: "reroute_truck",
-                  description: "Reroute a truck to a new destination market.",
-                  parameters: {
-                    type: "OBJECT" as any,
-                    properties: {
-                      truckId: { type: "STRING" as any, description: "The ID of the truck to reroute" },
-                      destination: { type: "STRING" as any, description: "The name of the new destination market" },
-                    },
-                    required: ["truckId", "destination"],
-                  },
-                },
-                {
-                  name: "alert_wholesaler",
-                  description: "Send an alert message to the wholesaler.",
-                  parameters: {
-                    type: "OBJECT" as any,
-                    properties: {
-                      message: { type: "STRING" as any, description: "The message to send to the wholesaler" },
-                    },
-                    required: ["message"],
-                  },
-                }
-              ]
-            }
-          ]
-        }
-      });
-
-      const functionCalls = result.functionCalls;
-
-      if (functionCalls && functionCalls.length > 0) {
-        for (const call of functionCalls) {
-          console.log(`[Orchestrator][Nerve Center Log] Model triggered tool: ${call.name}`);
-          let toolResult;
-          if (call.name === "reroute_truck") {
-            const args = call.args as any;
-            toolResult = reroute_truck(args.truckId, args.destination);
-          } else if (call.name === "alert_wholesaler") {
-            const args = call.args as any;
-            toolResult = alert_wholesaler(args.message);
-          }
-          console.log(`[Orchestrator][Nerve Center Log] Tool Execution Result: ${toolResult}`);
-          toolExecutions.push({ name: call.name, args: call.args, result: toolResult });
-        }
-      }
-    } catch (e) {
-      console.error("[Orchestrator] Error during function calling test:", e);
-    }
-  }
+  const toolExecutions = evaluatedCargos.flatMap(e => e.toolExecutions || []);
 
   return {
     totalCargosChecked: allCargos.length,

@@ -13,13 +13,16 @@
   <p>
     <a href="#the-15-lakh-crore-crisis">The Problem</a> •
     <a href="#our-autonomous-solution">Our Solution</a> •
-    <a href="#key-features">Key Features</a> •
-    <a href="#architecture">Tech Stack</a>
+    <a href="#key-features--live-integrations">Key Features</a> •
+    <a href="#roadmap--planned-integrations">Roadmap</a> •
+    <a href="#guardrails--safety">Guardrails & Safety</a> •
+    <a href="#the-architecture-vercel--google-cloud">Tech Stack</a>
   </p>
 
   <p>
     <img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Google Cloud" />
     <img src="https://img.shields.io/badge/Vertex_AI-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Vertex AI" />
+    <img src="https://img.shields.io/badge/BigQuery-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="BigQuery" />
     <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
     <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
   </p>
@@ -41,36 +44,56 @@ By combining real-time telemetry with a **Gemini-powered Multi-Agent Orchestrati
 
 ---
 
-## ✨ Key Features & Real Integrations
+## ✨ Key Features & Live Integrations
 
-Annapurna is built with **9 real, verifiable Google Cloud and communication integrations**, alongside a robust modern database layer.
+Annapurna is powered by real, production-ready Google Cloud APIs and modern database services:
 
-### 1. Vertex AI / Gemini 2.5 Flash (Primary Decision Engine)
-The core intelligence of Annapurna. It makes autonomous `continue`, `reroute`, or `emergency_sell` decisions based on live cargo telemetry. We utilize structured JSON outputs (`responseMimeType: 'application/json'`) to ensure reliable and strictly formatted AI responses.
+### 1. Vertex AI / Gemini 2.5 Flash (Primary Decision Engine) ✅
+The core intelligence of Annapurna. It makes autonomous `continue`, `reroute`, or `emergency_sell` decisions based on live cargo telemetry using structured JSON outputs (`responseMimeType: 'application/json'`).
 
-### 2. Gemini Function Calling (Multi-Agent Orchestrator)
-Our orchestrated multi-agent system uses Gemini with declared function tools (e.g., `reroute_truck`, `alert_wholesaler`). This empowers the AI to move beyond chatting and trigger *real actions* across the platform autonomously.
+### 2. Gemini Function Calling (Multi-Agent Orchestrator) ✅
+Our orchestrated multi-agent system leverages Gemini with declared tool definitions, executing function calls like `reroute_truck()` and `alert_wholesaler()` to trigger real platform actions autonomously.
 
-### 3. Gemini 1.5 Pro Vision (Cargo Quality Inspection)
-Quality control is automated via multi-modal vision. Drivers upload photographs of the cargo, and Gemini Vision instantly scans the image to detect spoilage percentages, rot, or mold.
+### 3. Gemini Vision (Cargo Quality Inspection) ✅
+Automated multi-modal quality inspection via real API calls. Drivers upload cargo photos, and Gemini Vision scans the image to analyze spoilage percentages, rot, or mold.
 
-### 4. Google BigQuery (Conversational Analytics & Forecasting)
-We've integrated a real `annapurna_telemetry.truck_telemetry` dataset. Fleet managers can ask plain English questions; Gemini translates them into SQL and executes them against the *actual* BigQuery table. We also utilize BigQuery for ARIMA forecasting on telemetry data.
+### 4. Google BigQuery (Conversational Analytics) ✅
+Real conversational analytics over the live `annapurna_telemetry` dataset. Fleet managers ask plain English questions; Gemini generates SQL and executes it directly against BigQuery tables.
 
-### 5. Google Cloud Firestore (Real-Time State Management)
-Operating in native mode, Firestore powers our real-time updates. Critical events like `alerts`, `cargo_states`, and `marketplace_listings` are actively written to and synced from real Firestore collections.
+### 5. BigQuery ML (Predictive Forecasting) ✅
+Utilizes BigQuery ML's `ARIMA_PLUS` forecasting model on telemetry data to predict temperature trends and potential equipment failures before they happen.
 
-### 6. Google Cloud Translation API (Vernacular Localization)
-To support a diverse workforce, our Nerve Center translates agent logs and alerts into Hindi, Marathi, Tamil, and Telugu using the actual `@google-cloud/translate` v2 API.
+### 6. Google Cloud Translation API (Vernacular Localization) ✅
+Supports a multi-lingual workforce by translating agent logs and alerts into Hindi, Marathi, Tamil, and Telugu using the real `@google-cloud/translate` v2 API.
 
-### 7. Google Document AI (Invoice Digitization)
-We use the real `@google-cloud/documentai` integration with an auto-processor creation pipeline. It instantly digitizes uploaded transport invoices via OCR, with a fallback to Gemini Vision if needed.
+### 7. Supabase PostgreSQL (Relational Database & State) ✅
+Provides a robust PostgreSQL backend handling secure user authentication, complex cargo tracking states, and persistent marketplace transactions.
 
-### 8. Nodemailer + Gmail SMTP (Automated Alerts)
-When emergency cargo reroutes or sales are triggered, the NotificationAgent dispatches actual email alerts to stakeholders via Gmail SMTP (or Ethereal test accounts).
+### 8. Nodemailer + Gmail SMTP (Automated Alerts) ✅
+Dispatches automated email alerts to fleet managers and wholesalers via Gmail SMTP whenever emergency reroutes or sales are triggered.
 
-### 9. Supabase (Primary Relational Database)
-Working alongside Firestore, Supabase provides our robust PostgreSQL backend. It handles secure user authentication, complex cargo tracking states, and persistent marketplace data.
+---
+
+## 🗺️ Roadmap — Planned Integrations
+
+We maintain full transparency regarding upcoming platform enhancements:
+
+- **Google Cloud Firestore**: State management currently handled by Supabase; Firestore planned for real-time sync
+- **Document AI**: Currently using Gemini Vision for OCR; dedicated Document AI processor planned
+- **Dialogflow CX**: Voice interface uses browser SpeechRecognition + Gemini NLU; Dialogflow CX planned for production
+- **Cloud Run**: Currently deployed on Vercel; Cloud Run migration planned for GCP-native deployment
+
+---
+
+## 🛡️ Guardrails & Safety
+
+Annapurna implements enterprise-grade safety and security mechanisms to prevent unexpected behavior and data leakage:
+
+- **SQL Injection Prevention**: Only SELECT statements are executed against BigQuery
+- **Dataset Restriction**: Queries are restricted to the annapurna_telemetry dataset
+- **Row Caps**: Query results capped at 100 rows
+- **API Key Security**: All credentials stored as environment variables, never committed
+- **Graceful Degradation**: All AI features fall back to deterministic logic if APIs are unavailable
 
 ---
 

@@ -299,51 +299,84 @@ export default function FleetApp() {
 // ============================================================================
 // DIALOGFLOW CX DRIVER VOICE WIDGET
 // ============================================================================
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 function DriverVoiceWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [intentExtracted, setIntentExtracted] = useState(false);
+  const [intentData, setIntentData] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { dispatch } = useAppState();
 
   const handleMicClick = () => {
-    if (isListening || transcript) {
-      setTranscript("");
-      setIntentExtracted(false);
-      setIsListening(false);
+    if (isListening || isProcessing) return;
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech Recognition API is not supported in this browser. Please try Chrome.");
       return;
     }
-    
-    setIsListening(true);
+
     setTranscript("");
     setIntentExtracted(false);
+    setIntentData(null);
+    setIsListening(true);
     
-    // Typing effect for transcript
-    const text = "I'm stuck in heavy rain on Highway 4, delaying ETA by 2 hours.";
-    let i = 0;
-    const typeInterval = setInterval(() => {
-      setTranscript(text.slice(0, i));
-      i++;
-      if (i > text.length) {
-        clearInterval(typeInterval);
-        setIsListening(false);
-        
-        setTimeout(() => {
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    
+    let currentTranscript = "";
+
+    recognition.onresult = (event: any) => {
+      let t = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        t += event.results[i][0].transcript;
+      }
+      currentTranscript = t;
+      setTranscript(t);
+    };
+
+    recognition.onend = async () => {
+      setIsListening(false);
+      if (currentTranscript.trim()) {
+        setIsProcessing(true);
+        try {
+          const res = await fetch('/api/voice/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript: currentTranscript }),
+          });
+          const data = await res.json();
+          setIntentData(data);
           setIntentExtracted(true);
+          
           dispatch({
             type: "ADD_NOTIFICATION",
             notification: {
               id: `cx-${Date.now()}`,
               type: "system",
-              title: "Route Delay (Dialogflow CX)",
-              message: "Driver reported heavy rain on Highway 4. ETA delayed by 120 mins.",
+              title: `Route Update (${data.intent})`,
+              message: data.response || "Driver update recorded.",
               timestamp: Date.now(),
               read: false,
             }
           });
-        }, 1500);
+        } catch (e) {
+          console.error("Voice processing failed", e);
+        }
+        setIsProcessing(false);
       }
-    }, 50);
+    };
+
+    recognition.start();
   };
 
   return (
@@ -402,8 +435,14 @@ function DriverVoiceWidget() {
               </div>
 
               <div className="w-full min-h-[60px] bg-black/30 rounded-xl p-3 border border-white/5 relative overflow-hidden">
-                {!transcript && !isListening && (
+                {!transcript && !isListening && !isProcessing && (
                   <p className="text-xs text-white/40 text-center italic mt-3">Click mic to initiate driver report...</p>
+                )}
+                {isProcessing && (
+                  <p className="text-xs text-[#007AFF] text-center italic mt-3 flex justify-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#007AFF] animate-pulse"></span>
+                    Processing AI Intent...
+                  </p>
                 )}
                 {transcript && (
                   <p className="text-sm text-white/90 font-medium leading-relaxed">"{transcript}"</p>
@@ -414,7 +453,7 @@ function DriverVoiceWidget() {
               </div>
 
               <AnimatePresence>
-                {intentExtracted && (
+                {intentExtracted && intentData && (
                   <motion.div
                     initial={{ opacity: 0, height: 0, marginTop: 0 }}
                     animate={{ opacity: 1, height: "auto", marginTop: 16 }}
@@ -429,11 +468,15 @@ function DriverVoiceWidget() {
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-black/20 rounded-md p-2 border border-white/5">
                         <span className="text-white/40 block text-[9px] mb-0.5 uppercase">Intent</span>
-                        <span className="text-white font-mono text-[#34C759]">UpdateETA</span>
+                        <span className="text-white font-mono text-[#34C759]">{intentData.intent || 'Unknown'}</span>
                       </div>
                       <div className="bg-black/20 rounded-md p-2 border border-white/5">
                         <span className="text-white/40 block text-[9px] mb-0.5 uppercase">Entities</span>
-                        <span className="text-white font-mono text-[#FF9500]">Delay: 120m</span>
+                        <div className="flex flex-col">
+                          {intentData.entities ? Object.entries(intentData.entities).map(([k, v]) => (
+                            <span key={k} className="text-white font-mono text-[#FF9500] truncate">{k}: {String(v)}</span>
+                          )) : <span className="text-white/40 text-[9px] italic">None</span>}
+                        </div>
                       </div>
                     </div>
                     <div className="mt-3 text-[10px] text-[#007AFF] font-bold flex items-center justify-center gap-1 bg-[#007AFF]/10 rounded-md py-1.5">
@@ -886,38 +929,72 @@ function FleetTrackingView() {
                 <div>
                   <p className="text-xs text-[#34C759] font-bold mb-1">✓ AI Verification Complete</p>
                   <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
-                    Visual analysis indicates minimal surface bruising (2.4%). Coloration is consistent with safe ripeness levels. No mold detected.
+                    {qualityScore}
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <button 
-              onClick={() => {
-                setIsScanning(true);
-                setTimeout(() => {
-                  setIsScanning(false);
-                  setQualityScore("A- (92%)");
-                }, 2500);
-              }}
-              disabled={isScanning}
-              className="w-full btn btn-ghost py-4 border border-dashed border-[var(--separator-opaque)] relative overflow-hidden group rounded-xl"
-            >
-              {isScanning ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-full h-1 bg-[var(--fill-secondary)] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#007AFF] w-1/2 animate-[pulse_1s_ease-in-out_infinite] translate-x-[-100%]"></div>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => {
+                  setIsScanning(true);
+                  setTimeout(() => {
+                    setIsScanning(false);
+                    setQualityScore("A- (92%) Visual analysis indicates minimal surface bruising (2.4%). Coloration is consistent with safe ripeness levels. No mold detected.");
+                  }, 2500);
+                }}
+                disabled={isScanning}
+                className="w-full btn btn-ghost py-3 border border-dashed border-[var(--separator-opaque)] relative overflow-hidden group rounded-xl"
+              >
+                {isScanning ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-full h-1 bg-[var(--fill-secondary)] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#007AFF] w-1/2 animate-[pulse_1s_ease-in-out_infinite] translate-x-[-100%]"></div>
+                    </div>
+                    <span className="text-xs text-[#007AFF] animate-pulse">Running YOLOv8 Vision Model...</span>
                   </div>
-                  <span className="text-xs text-[#007AFF] animate-pulse">Running YOLOv8 Vision Model...</span>
-                </div>
-              ) : (
-                <span className="flex items-center justify-center gap-2 text-[var(--text-tertiary)] group-hover:text-[#007AFF]">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
-                  Driver: Upload Photo for Quality Cert
-                </span>
-              )}
-              {isScanning && <div className="absolute top-0 left-0 w-full h-0.5 bg-[#007AFF] shadow-[0_0_10px_#007AFF] animate-[scan_2s_ease-in-out_infinite]"></div>}
-            </button>
+                ) : (
+                  <span className="flex items-center justify-center gap-2 text-[var(--text-tertiary)] group-hover:text-[#007AFF]">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                    Quick Demo
+                  </span>
+                )}
+                {isScanning && <div className="absolute top-0 left-0 w-full h-0.5 bg-[#007AFF] shadow-[0_0_10px_#007AFF] animate-[scan_2s_ease-in-out_infinite]"></div>}
+              </button>
+              <label
+                className={`w-full cursor-pointer flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-[#007AFF] to-[#34C759] text-white font-bold rounded-xl shadow-lg ${isScanning ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                Driver: Upload Photo for Quality Cert
+                <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setIsScanning(true);
+                  try {
+                    const base64Image = await new Promise<string>((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result as string);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(file);
+                    });
+                    const response = await fetch("/api/vision/qc", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ image: base64Image })
+                    });
+                    if (response.ok) {
+                      const data = await response.json();
+                      setQualityScore(`Score: ${100 - data.spoilagePercentage}% - ${data.reasoning}`);
+                    }
+                  } catch (err) {
+                    console.error(err);
+                  } finally {
+                    setIsScanning(false);
+                  }
+                }} />
+              </label>
+            </div>
           )}
         </div>
 

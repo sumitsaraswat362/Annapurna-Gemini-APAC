@@ -1,8 +1,18 @@
 import { BigQuery } from '@google-cloud/bigquery';
 
-export const bigquery = new BigQuery({
-  projectId: 'project-a9c284f8-6bca-440a-a0c',
-});
+const PROJECT_ID = process.env.GCP_PROJECT_ID || 'project-a9c284f8-6bca-440a-a0c';
+
+function createClient(): BigQuery {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    const credentials = JSON.parse(
+      Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON, 'base64').toString()
+    );
+    return new BigQuery({ projectId: PROJECT_ID, credentials });
+  }
+  return new BigQuery({ projectId: PROJECT_ID });
+}
+
+export const bigquery = createClient();
 
 export interface ForecastDataPoint {
   date: string;
@@ -10,48 +20,97 @@ export interface ForecastDataPoint {
   anomaly: boolean;
 }
 
+/**
+ * Attempts to query a real BigQuery ML ARIMA_PLUS forecast model.
+ * Falls back to querying raw telemetry data for risk aggregation.
+ * Final fallback: deterministic sine-wave pattern.
+ */
 export async function getARIMAForecast(): Promise<ForecastDataPoint[]> {
+  // Strategy 1: Try real BigQuery ML forecast
   try {
-    const sql = `SELECT DATE(timestamp) as date, AVG(temperature_celsius) as avg_temp, COUNT(CASE WHEN status = 'Spoiled' THEN 1 END) as spoiled_count FROM annapurna_telemetry.truck_telemetry GROUP BY date ORDER BY date`;
+    const forecastSQL = `
+      SELECT
+        forecast_timestamp AS date,
+        forecast_value AS predicted_risk,
+        prediction_interval_lower_bound AS lower_bound,
+        prediction_interval_upper_bound AS upper_bound
+      FROM ML.FORECAST(MODEL \`${PROJECT_ID}.annapurna_telemetry.spoilage_forecast_model\`, STRUCT(14 AS horizon))
+      ORDER BY forecast_timestamp
+    `;
+    const [rows] = await bigquery.query({ query: forecastSQL });
     
-    const [rows] = await bigquery.query({ query: sql });
-    
-    if (!rows || rows.length === 0) {
-      throw new Error('No rows returned from BigQuery');
+    if (rows && rows.length > 0) {
+      console.log('[BigQuery ML] ARIMA forecast returned', rows.length, 'rows');
+      return rows.map((row: any) => ({
+        date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : String(row.date).split('T')[0],
+        predicted_spoilage_risk: typeof row.predicted_risk === 'number'
+          ? Math.min(100, Math.max(0, row.predicted_risk))
+          : parseFloat(row.predicted_risk) || 15,
+        anomaly: (row.upper_bound - row.lower_bound) > 20,
+      }));
     }
+  } catch (e) {
+    console.warn('[BigQuery ML] ARIMA model not available, trying raw aggregation:', (e as Error).message);
+  }
 
-    return rows.map(row => ({
-      date: typeof row.date === 'object' && row.date !== null && 'value' in row.date ? String(row.date.value) : String(row.date),
-      predicted_spoilage_risk: typeof row.avg_temp === 'number' ? row.avg_temp : parseFloat(row.avg_temp),
-      anomaly: parseInt(String(row.spoiled_count), 10) > 0,
-    }));
-  } catch (error) {
-    console.error('BigQuery getARIMAForecast error:', error);
-    
-    const data: ForecastDataPoint[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    
-    for (let i = 1; i <= 14; i++) {
-      const nextDate = new Date(today);
-      nextDate.setDate(today.getDate() + i);
-      
-      const timeMs = nextDate.getTime();
-      const wave = Math.sin(timeMs / (1000 * 60 * 60 * 24)) * 5;
-      const risk = 12.5 + wave + (i * 0.5);
-      
-      let isAnomaly = false;
-      if (i === 9 || i === 10) {
-          isAnomaly = true;
-      }
-  
-      data.push({
-        date: nextDate.toISOString().split('T')[0],
-        predicted_spoilage_risk: Math.max(0, parseFloat(risk.toFixed(2)) + (isAnomaly ? 25 : 0)),
-        anomaly: isAnomaly,
+  // Strategy 2: Query raw telemetry for actual risk data
+  try {
+    const rawSQL = `
+      SELECT
+        DATE(timestamp) as date,
+        AVG(temperature_celsius) as avg_temp,
+        COUNT(CASE WHEN status = 'Spoiled' THEN 1 END) as spoiled_count,
+        COUNT(*) as total_count
+      FROM \`${PROJECT_ID}.annapurna_telemetry.truck_telemetry\`
+      GROUP BY date
+      ORDER BY date
+      LIMIT 14
+    `;
+    const [rows] = await bigquery.query({ query: rawSQL });
+
+    if (rows && rows.length > 0) {
+      console.log('[BigQuery] Raw telemetry aggregation returned', rows.length, 'rows');
+      return rows.map((row: any) => {
+        const avgTemp = typeof row.avg_temp === 'number' ? row.avg_temp : parseFloat(row.avg_temp);
+        const spoiledCount = parseInt(String(row.spoiled_count), 10);
+        const totalCount = parseInt(String(row.total_count), 10);
+        const spoilageRate = totalCount > 0 ? (spoiledCount / totalCount) * 100 : 0;
+        // Combine temperature anomaly and spoilage rate into a risk score
+        const riskScore = Math.min(100, avgTemp * 2 + spoilageRate * 3);
+
+        return {
+          date: typeof row.date === 'object' && row.date !== null && 'value' in row.date
+            ? String(row.date.value) : String(row.date),
+          predicted_spoilage_risk: parseFloat(riskScore.toFixed(2)),
+          anomaly: spoiledCount > 0,
+        };
       });
     }
-    
-    return data;
+  } catch (e) {
+    console.warn('[BigQuery] Raw aggregation failed:', (e as Error).message);
   }
+
+  // Strategy 3: Deterministic fallback (no randomness)
+  console.log('[Fallback] Using deterministic sine-wave forecast');
+  const data: ForecastDataPoint[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = 1; i <= 14; i++) {
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + i);
+
+    const dayOfYear = Math.floor((nextDate.getTime() - new Date(nextDate.getFullYear(), 0, 0).getTime()) / 86400000);
+    const wave = Math.sin(dayOfYear * 0.3) * 8;
+    const trend = i * 0.7;
+    const risk = 15 + wave + trend;
+    const isAnomaly = i === 9 || i === 10;
+
+    data.push({
+      date: nextDate.toISOString().split('T')[0],
+      predicted_spoilage_risk: Math.max(0, parseFloat(risk.toFixed(2)) + (isAnomaly ? 25 : 0)),
+      anomaly: isAnomaly,
+    });
+  }
+  return data;
 }

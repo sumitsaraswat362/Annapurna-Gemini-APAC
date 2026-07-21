@@ -109,6 +109,7 @@ Return a JSON object with this exact structure:
   }
 
   // --- Deterministic Rules Logic ---
+  console.warn("Gemini decision failed, using deterministic fallback for cargo:", cargo.id);
   if (telemetry.temperature <= safeTemperatureMax) {
     return {
       cargoId: cargo.id,

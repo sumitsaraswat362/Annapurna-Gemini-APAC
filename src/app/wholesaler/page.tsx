@@ -129,19 +129,88 @@ export default function WholesalerDashboard() {
     }
   };
 
-  const handleScanDoc = () => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsScanning(true);
+    setScanResult(null);
+    
+    try {
+      const base64Image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const response = await fetch("/api/vision/qc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64Image })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setScanResult(data);
+      }
+    } catch (error) {
+      console.error("Scan failed", error);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleScanDoc = async () => {
     setIsScanningDoc(true);
     setDocResult(null);
-    setTimeout(() => {
-      setIsScanningDoc(false);
-      setDocResult({
-        weight: "5000kg",
-        tempRequired: "-5°C",
-        price: "$12,000",
-        date: new Date().toLocaleDateString(),
-        type: "Bill of Lading"
+    try {
+      // Demo invoice URL
+      const sampleImageUrl = "https://templates.invoicehome.com/invoice-template-us-neat-750px.png";
+      const response = await fetch("/api/document-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: sampleImageUrl })
       });
-    }, 2500); // 2.5s scanning time
+      if (response.ok) {
+        const data = await response.json();
+        setDocResult(data);
+      }
+    } catch (error) {
+      console.error("Doc scan failed", error);
+    } finally {
+      setIsScanningDoc(false);
+    }
+  };
+
+  const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsScanningDoc(true);
+    setDocResult(null);
+    
+    try {
+      const base64Image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      
+      const response = await fetch("/api/document-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64Image })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDocResult(data);
+      }
+    } catch (error) {
+      console.error("Scan failed", error);
+    } finally {
+      setIsScanningDoc(false);
+    }
   };
 
 
@@ -526,20 +595,28 @@ export default function WholesalerDashboard() {
                 <p className="text-[var(--text-secondary)] mb-8 font-medium">Use Vision AI to instantly assess the quality of received cargo and detect spoilage before accepting.</p>
                 
                 {!scanResult ? (
-                  <button
-                    onClick={handleScanCargo}
-                    disabled={isScanning}
-                    className="skeuomorphic-btn bg-gradient-to-r from-[#AF52DE] to-[#007AFF] text-white px-8 py-4 text-lg w-full md:w-auto relative overflow-hidden group"
-                  >
-                    {isScanning ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Scanning Cargo...
-                      </span>
-                    ) : (
-                      "Scan Cargo (Upload)"
-                    )}
-                  </button>
+                  <div className="flex flex-col gap-4">
+                    <button
+                      onClick={handleScanCargo}
+                      disabled={isScanning}
+                      className="skeuomorphic-btn bg-gradient-to-r from-[#AF52DE] to-[#007AFF] text-white px-8 py-4 text-lg w-full md:w-auto relative overflow-hidden group"
+                    >
+                      {isScanning ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                          Scanning Cargo...
+                        </span>
+                      ) : (
+                        "Simulate Demo Scan"
+                      )}
+                    </button>
+                    <label
+                      className={`cursor-pointer skeuomorphic-btn border border-[#007AFF] text-[#007AFF] px-8 py-4 text-lg w-full md:w-auto text-center ${isScanning ? 'opacity-50 pointer-events-none' : ''}`}
+                    >
+                      Upload Cargo Photo
+                      <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                    </label>
+                  </div>
                 ) : (
                   <div className="bg-[var(--fill-secondary)] rounded-2xl p-6 text-left border border-[var(--separator)] animate-in fade-in zoom-in duration-300">
                     <div className="flex items-center justify-between mb-4">
@@ -618,17 +695,22 @@ export default function WholesalerDashboard() {
                         className="w-full"
                       >
                         <div 
-                          onClick={handleScanDoc}
-                          className="border-2 border-dashed border-[var(--separator)] rounded-3xl p-12 flex flex-col items-center justify-center cursor-pointer hover:border-[#007AFF]/50 hover:bg-[#007AFF]/5 transition-all group backdrop-blur-sm bg-black/5 dark:bg-black/20"
+                          className="border-2 border-dashed border-[var(--separator)] rounded-3xl p-12 flex flex-col items-center justify-center group backdrop-blur-sm bg-black/5 dark:bg-black/20"
                         >
                           <UploadCloud className="w-16 h-16 text-[var(--text-tertiary)] group-hover:text-[#007AFF] transition-colors mb-6" strokeWidth={1.5} />
                           <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Upload Document</h3>
                           <p className="text-sm text-[var(--text-secondary)] mb-6 text-center max-w-sm">
                             Drag and drop your PDF or image here, or click to browse.
                           </p>
-                          <button className="skeuomorphic-btn bg-gradient-to-r from-[#007AFF] to-[#34C759] text-white px-8 py-4 text-base font-bold shadow-lg shadow-[#007AFF]/20 rounded-xl">
-                            Select File
-                          </button>
+                          <div className="flex gap-4">
+                            <button onClick={handleScanDoc} className="skeuomorphic-btn border border-[#007AFF] text-[#007AFF] px-8 py-4 text-base font-bold shadow-lg shadow-[#007AFF]/20 rounded-xl">
+                              Simulate Demo Extract
+                            </button>
+                            <label className="cursor-pointer skeuomorphic-btn bg-gradient-to-r from-[#007AFF] to-[#34C759] text-white px-8 py-4 text-base font-bold shadow-lg shadow-[#007AFF]/20 rounded-xl">
+                              Upload Document
+                              <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleDocUpload} />
+                            </label>
+                          </div>
                         </div>
                       </motion.div>
                     ) : isScanningDoc ? (
