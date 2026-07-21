@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppState } from "@/lib/store";
 import { getSimulationFrame, calculateSpoilageTime, shouldTriggerEmergency, getTotalFrames } from "@/lib/simulator";
-import { makeDecision } from "@/lib/ai-agent";
+import type { AIDecision } from "@/lib/types";
 import CargoHealthMonitor from "@/components/CargoHealthMonitor";
 import AIDecisionCard from "@/components/AIDecisionCard";
 import BidCard from "@/components/BidCard";
@@ -762,7 +762,40 @@ function FleetTrackingView() {
         const cargo = state.cargos.find((c) => c.id === targetCargoId);
         if (cargo) {
           const updatedCargo = { ...cargo, telemetry: frame, status: "emergency" as const, spoilageTimeMinutes: spoilageMin };
-          const decision = await makeDecision(updatedCargo);
+          // Call the server-side API route instead of importing the server SDK directly
+          let decision: AIDecision;
+          try {
+            const res = await fetch('/api/ai-agent', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ cargo: updatedCargo, spoilageMinutes: spoilageMin }),
+            });
+            const geminiResult = await res.json();
+            const nearestMarket = cargo.reroutableMarkets?.filter(m => m.etaMinutes < spoilageMin - 10).sort((a, b) => a.etaMinutes - b.etaMinutes)[0] || null;
+            decision = {
+              cargoId: cargo.id,
+              timestamp: Date.now(),
+              reasoning: geminiResult.reasoning || 'Emergency reroute triggered by AI.',
+              recommendation: geminiResult.recommendation || 'reroute',
+              suggestedMarket: nearestMarket,
+              estimatedRecoveryPercent: nearestMarket ? 80 : 20,
+              estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * (nearestMarket ? 0.8 : 0.2)),
+              confidence: geminiResult.confidence || 0.85,
+            };
+          } catch {
+            // Deterministic fallback if API call fails
+            const nearestMarket = cargo.reroutableMarkets?.filter(m => m.etaMinutes < spoilageMin - 10).sort((a, b) => a.etaMinutes - b.etaMinutes)[0] || null;
+            decision = {
+              cargoId: cargo.id,
+              timestamp: Date.now(),
+              reasoning: `COLD CHAIN FAILURE: Temperature ${frame.temperature}°C exceeds safe limit of ${cargo.safeTemperatureMax}°C. Estimated spoilage in ${spoilageMin} minutes. ${nearestMarket ? `Emergency reroute to ${nearestMarket.name}.` : 'No viable markets found.'}`,
+              recommendation: nearestMarket ? 'reroute' : 'emergency_sell',
+              suggestedMarket: nearestMarket,
+              estimatedRecoveryPercent: nearestMarket ? 80 : 20,
+              estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * (nearestMarket ? 0.8 : 0.2)),
+              confidence: 0.85,
+            };
+          }
           dispatch({ type: "ADD_AI_DECISION", decision });
           dispatch({ type: "SET_ASKING_PRICE", cargoId: targetCargoId, pricePerKg: 16 });
           dispatch({ type: "BROADCAST_TO_MARKETPLACE", cargoId: targetCargoId });
