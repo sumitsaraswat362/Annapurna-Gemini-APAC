@@ -373,7 +373,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   React.useEffect(() => {
     // Prevent overwriting a populated localStorage with an empty initial state on mount
     if (state.cargos.length > 0 || state.bids.length > 0) {
-      localStorage.setItem('annapurna_state', JSON.stringify(state));
+      const newStateStr = JSON.stringify(state);
+      if (localStorage.getItem('annapurna_state') !== newStateStr) {
+        localStorage.setItem('annapurna_state', newStateStr);
+      }
     }
   }, [state]);
 
