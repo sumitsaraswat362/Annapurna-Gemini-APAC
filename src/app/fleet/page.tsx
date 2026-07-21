@@ -1253,7 +1253,7 @@ function FleetTrackingView() {
                           cargo.telemetry.temperature > cargo.safeTemperatureMax ? "text-[#FF3B30]" : "text-[#34C759]"
                         }`}>
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.866 8.284 8.284 0 0 0 3 2.48Z" /></svg>
-                          {cargo.telemetry.temperature.toFixed(1)}°C
+                          {(cargo.telemetry?.temperature || 0).toFixed(1)}°C
                         </span>
                         <span className="text-xs text-[var(--text-tertiary)] font-medium flex items-center gap-1.5">
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>

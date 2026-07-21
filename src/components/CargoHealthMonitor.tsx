@@ -97,7 +97,7 @@ export default function CargoHealthMonitor({
                   : "text-[#FF3B30]"
               } ${status === "danger" ? "animate-pulse-danger" : ""}`}
             >
-              {temperature.toFixed(1)}°
+              {(temperature || 0).toFixed(1)}°
             </span>
             <span className="text-xs text-[#8E8E93] mt-0.5">
               Safe: ≤{safeMax}°C

@@ -128,7 +128,7 @@ export default function CargoOfferCard({
             <p className={`font-[family-name:var(--font-mono)] text-base font-bold mt-1 ${
               urgency === "critical" ? "text-[#FF3B30] animate-pulse" : urgency === "warning" ? "text-[#FF9500]" : "text-[#34C759]"
             }`}>
-              {cargo.telemetry.temperature.toFixed(1)}°C
+              {(cargo.telemetry?.temperature || 0).toFixed(1)}°C
             </p>
           </div>
           <div className="clay text-center p-3">
