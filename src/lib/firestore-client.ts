@@ -10,7 +10,16 @@ const getFirestore = () => {
   return new Firestore({ projectId: PROJECT_ID });
 };
 
-const firestore = getFirestore();
+let _firestoreInstance: Firestore | null = null;
+const firestore = new Proxy({} as Firestore, {
+  get(target, prop) {
+    if (!_firestoreInstance) {
+      _firestoreInstance = getFirestore();
+    }
+    const val = (_firestoreInstance as any)[prop];
+    return typeof val === 'function' ? val.bind(_firestoreInstance) : val;
+  }
+});
 
 export async function saveAlert(alert: object): Promise<string> {
   const coll = firestore.collection('alerts');

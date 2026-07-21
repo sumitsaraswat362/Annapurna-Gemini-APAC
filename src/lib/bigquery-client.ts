@@ -12,7 +12,16 @@ function createClient(): BigQuery {
   return new BigQuery({ projectId: PROJECT_ID });
 }
 
-export const bigquery = createClient();
+let _bigqueryInstance: BigQuery | null = null;
+export const bigquery = new Proxy({} as BigQuery, {
+  get(target, prop) {
+    if (!_bigqueryInstance) {
+      _bigqueryInstance = createClient();
+    }
+    const val = (_bigqueryInstance as any)[prop];
+    return typeof val === 'function' ? val.bind(_bigqueryInstance) : val;
+  }
+});
 
 export interface ForecastDataPoint {
   date: string;

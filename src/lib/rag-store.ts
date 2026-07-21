@@ -4,11 +4,18 @@ import { GoogleGenAI } from '@google/genai';
 
 const PROJECT_ID = process.env.GCP_PROJECT_ID || 'project-a9c284f8-6bca-440a-a0c';
 
-// Explicitly use GoogleGenAI with vertexai settings for embedding
-const embedAi = new GoogleGenAI({
-  vertexai: {
-    project: PROJECT_ID,
-    location: 'us-central1'
+let _embedAiInstance: GoogleGenAI | null = null;
+const embedAi = new Proxy({} as GoogleGenAI, {
+  get(target, prop) {
+    if (!_embedAiInstance) {
+      _embedAiInstance = new GoogleGenAI({
+        vertexai: {
+          project: PROJECT_ID,
+          location: 'us-central1'
+        }
+      });
+    }
+    return (_embedAiInstance as any)[prop];
   }
 });
 
@@ -21,7 +28,16 @@ const getFirestore = () => {
   return new Firestore({ projectId: PROJECT_ID });
 };
 
-const firestore = getFirestore();
+let _firestoreInstance: Firestore | null = null;
+const firestore = new Proxy({} as Firestore, {
+  get(target, prop) {
+    if (!_firestoreInstance) {
+      _firestoreInstance = getFirestore();
+    }
+    const val = (_firestoreInstance as any)[prop];
+    return typeof val === 'function' ? val.bind(_firestoreInstance) : val;
+  }
+});
 
 export class LegalAdvisor {
   async queryLegalContext(question: string): Promise<string> {
