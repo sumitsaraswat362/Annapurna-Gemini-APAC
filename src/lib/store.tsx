@@ -77,7 +77,8 @@ type Action =
   | { type: "SET_BIDS"; bids: Bid[] }
   | { type: "MARK_DELIVERED"; cargoId: string }
   | { type: "DELETE_CARGO"; cargoId: string }
-  | { type: "SET_FULL_STATE"; state: AppState };
+  | { type: "SET_FULL_STATE"; state: AppState }
+  | { type: "MERGE_FIRESTORE_CARGOS"; firestoreCargos: Cargo[] };
 
 // --- Reducer ---
 function appReducer(state: AppState, action: Action): AppState {
@@ -295,6 +296,16 @@ function appReducer(state: AppState, action: Action): AppState {
     case "SET_FULL_STATE":
       return action.state;
 
+    case "MERGE_FIRESTORE_CARGOS": {
+      // Merge: Firestore cargos override local ones by id; keep local-only cargos too
+      const firestoreIds = new Set(action.firestoreCargos.map(c => c.id));
+      const localOnly = state.cargos.filter(c => !firestoreIds.has(c.id));
+      return {
+        ...state,
+        cargos: [...action.firestoreCargos, ...localOnly],
+      };
+    }
+
     default:
       return state;
   }
@@ -317,49 +328,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Real-time listener for cargos
     const unsubCargos = onSnapshot(cargosRef, (snapshot) => {
-      if (!snapshot.empty) {
-        firestoreReady.current = true;
-        const cargos = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Cargo[];
-        dispatch({ type: "SET_CARGOS", cargos });
-      }
+      firestoreReady.current = true;
+      const cargos = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Cargo[];
+      console.log("[Firestore] onSnapshot cargos:", cargos.length, "docs");
+      // MERGE Firestore cargos with local mock cargos (keep local ones that aren't in Firestore)
+      dispatch({ type: "MERGE_FIRESTORE_CARGOS", firestoreCargos: cargos });
     }, (err) => {
       console.error("Firestore cargos listener error:", err);
     });
 
     // Real-time listener for bids
     const unsubBids = onSnapshot(bidsRef, (snapshot) => {
-      if (!snapshot.empty) {
-        const bids = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Bid[];
-        dispatch({ type: "SET_BIDS", bids });
-      }
+      const bids = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Bid[];
+      console.log("[Firestore] onSnapshot bids:", bids.length, "docs");
+      dispatch({ type: "SET_BIDS", bids });
     }, (err) => {
       console.error("Firestore bids listener error:", err);
     });
 
-    // localStorage fallback for same-browser cross-tab sync
-    const saved = localStorage.getItem("annapurna_state");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.cargos?.length > 0) {
-          dispatch({ type: "SET_FULL_STATE", state: parsed });
-        }
-      } catch (e) {}
-    }
-
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "annapurna_state" && e.newValue) {
-        try {
-          dispatch({ type: "SET_FULL_STATE", state: JSON.parse(e.newValue) });
-        } catch (e) {}
-      }
-    };
-    window.addEventListener("storage", handleStorage);
+    // No localStorage fallback — Firestore is the single source of truth for cross-device sync
 
     return () => {
       unsubCargos();
       unsubBids();
-      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 
