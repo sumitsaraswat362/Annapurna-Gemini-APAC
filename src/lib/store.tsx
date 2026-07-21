@@ -1,10 +1,13 @@
 // ============================================================
 // ANNAPURNA — Global State Store (React Context + useReducer)
+// Synced via Google Cloud Firestore (real-time onSnapshot)
 // ============================================================
 
 "use client";
 
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
+import { db } from "./firebase";
+import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, query, where, writeBatch } from "firebase/firestore";
 import {
   Cargo,
   Bid,
@@ -15,6 +18,24 @@ import {
   Market,
 } from "./types";
 import { FLEET_CARGOS } from "@/data/mock-data";
+
+// --- Helper: strip undefined values (Firestore rejects undefined) ---
+function sanitize(obj: any): any {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(sanitize);
+  const clean: any = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) {
+      clean[k] = null;
+    } else if (typeof v === "object" && v !== null) {
+      clean[k] = sanitize(v);
+    } else {
+      clean[k] = v;
+    }
+  }
+  return clean;
+}
 
 // --- State Shape ---
 export interface AppState {
@@ -279,19 +300,6 @@ function appReducer(state: AppState, action: Action): AppState {
   }
 }
 
-// --- Helper: Push state to server-side Firestore via API route ---
-async function syncToFirestore(type: string, data: any) {
-  try {
-    await fetch("/api/firestore", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, data }),
-    });
-  } catch (err) {
-    // Silently fail — localStorage fallback handles cross-tab sync
-  }
-}
-
 // --- Context ---
 const AppContext = createContext<{
   state: AppState;
@@ -300,127 +308,181 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const firestoreReady = React.useRef(false);
 
-  // On mount: fetch from Firestore via API, then set up localStorage fallback & polling
+  // On mount: set up real-time Firestore listeners
   React.useEffect(() => {
-    // 1. Fetch initial data from Firestore (server-side, uses service account)
-    const fetchFromFirestore = async () => {
-      try {
-        const res = await fetch("/api/firestore");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.cargos && data.cargos.length > 0) {
-            dispatch({ type: "SET_CARGOS", cargos: data.cargos });
-          }
-          if (data.bids && data.bids.length > 0) {
-            dispatch({ type: "SET_BIDS", bids: data.bids });
-          }
-        }
-      } catch (err) {
-        // Firestore unavailable, fall through to localStorage
+    const cargosRef = collection(db, "cargos");
+    const bidsRef = collection(db, "bids");
+
+    // Real-time listener for cargos
+    const unsubCargos = onSnapshot(cargosRef, (snapshot) => {
+      if (!snapshot.empty) {
+        firestoreReady.current = true;
+        const cargos = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Cargo[];
+        dispatch({ type: "SET_CARGOS", cargos });
       }
-    };
-    fetchFromFirestore();
+    }, (err) => {
+      console.error("Firestore cargos listener error:", err);
+    });
 
-    // 2. Poll Firestore every 3 seconds for real-time-like sync across devices
-    const pollInterval = setInterval(fetchFromFirestore, 3000);
+    // Real-time listener for bids
+    const unsubBids = onSnapshot(bidsRef, (snapshot) => {
+      if (!snapshot.empty) {
+        const bids = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Bid[];
+        dispatch({ type: "SET_BIDS", bids });
+      }
+    }, (err) => {
+      console.error("Firestore bids listener error:", err);
+    });
 
-    // 3. LocalStorage cross-tab sync (instant sync for same-browser tabs)
-    const saved = localStorage.getItem('annapurna_state');
+    // localStorage fallback for same-browser cross-tab sync
+    const saved = localStorage.getItem("annapurna_state");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed.cargos && parsed.cargos.length > 0) {
-          dispatch({ type: 'SET_FULL_STATE', state: parsed });
+        if (parsed.cargos?.length > 0) {
+          dispatch({ type: "SET_FULL_STATE", state: parsed });
         }
-      } catch(e) {}
+      } catch (e) {}
     }
 
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'annapurna_state' && e.newValue) {
+      if (e.key === "annapurna_state" && e.newValue) {
         try {
-          const newState = JSON.parse(e.newValue);
-          dispatch({ type: 'SET_FULL_STATE', state: newState });
-        } catch(e) {}
+          dispatch({ type: "SET_FULL_STATE", state: JSON.parse(e.newValue) });
+        } catch (e) {}
       }
     };
-    window.addEventListener('storage', handleStorage);
+    window.addEventListener("storage", handleStorage);
 
     return () => {
-      clearInterval(pollInterval);
-      window.removeEventListener('storage', handleStorage);
+      unsubCargos();
+      unsubBids();
+      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 
-  // Persist state changes to localStorage
+  // Persist to localStorage
   React.useEffect(() => {
     if (state.cargos.length > 0 || state.bids.length > 0) {
-      const newStateStr = JSON.stringify(state);
-      if (localStorage.getItem('annapurna_state') !== newStateStr) {
-        localStorage.setItem('annapurna_state', newStateStr);
+      const s = JSON.stringify(state);
+      if (localStorage.getItem("annapurna_state") !== s) {
+        localStorage.setItem("annapurna_state", s);
       }
     }
   }, [state]);
 
-  // Middleware Dispatch — updates local state + pushes to Firestore via server API
+  // Middleware: update local state optimistically, then write to Firestore
   const asyncDispatch = async (action: Action) => {
-    dispatch(action); // Optimistic UI update
+    dispatch(action); // Optimistic local update
 
     try {
-      if (action.type === 'ADD_CARGO') {
-        await syncToFirestore("cargo", { ...action.cargo, createdAt: Date.now() });
-      } else if (action.type === 'SET_ASKING_PRICE') {
+      if (action.type === "ADD_CARGO") {
+        const data = sanitize({ ...action.cargo, createdAt: Date.now() });
+        await setDoc(doc(db, "cargos", action.cargo.id), data);
+        console.log("[Firestore] ADD_CARGO written:", action.cargo.id);
+
+      } else if (action.type === "SET_ASKING_PRICE") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          await syncToFirestore("cargo", { ...cargo, askingPricePerKg: action.pricePerKg });
+          const data = sanitize({ ...cargo, askingPricePerKg: action.pricePerKg, createdAt: Date.now() });
+          await setDoc(doc(db, "cargos", action.cargoId), data);
+          console.log("[Firestore] SET_ASKING_PRICE written:", action.cargoId);
         }
-      } else if (action.type === 'BROADCAST_TO_MARKETPLACE') {
+
+      } else if (action.type === "BROADCAST_TO_MARKETPLACE") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          await syncToFirestore("cargo", { ...cargo, status: "emergency", createdAt: Date.now() });
+          const data = sanitize({ ...cargo, status: "emergency", createdAt: Date.now() });
+          await setDoc(doc(db, "cargos", action.cargoId), data);
+          console.log("[Firestore] BROADCAST_TO_MARKETPLACE written:", action.cargoId);
         }
-      } else if (action.type === 'UPDATE_CARGO_STATUS') {
+
+      } else if (action.type === "TRIGGER_MANUAL_EMERGENCY") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          await syncToFirestore("cargo", { ...cargo, status: action.status, spoilageTimeMinutes: action.spoilageMinutes });
+          const data = sanitize({
+            ...cargo,
+            status: "emergency",
+            telemetry: { ...cargo.telemetry, temperature: action.newTemperature },
+            createdAt: Date.now(),
+          });
+          await setDoc(doc(db, "cargos", action.cargoId), data);
+          console.log("[Firestore] TRIGGER_MANUAL_EMERGENCY written:", action.cargoId);
         }
-      } else if (action.type === 'TRIGGER_MANUAL_EMERGENCY') {
+
+      } else if (action.type === "UPDATE_TELEMETRY") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          await syncToFirestore("cargo", { ...cargo, status: "emergency", telemetry: { ...cargo.telemetry, temperature: action.newTemperature } });
+          const data = sanitize({ ...cargo, telemetry: action.telemetry });
+          await setDoc(doc(db, "cargos", action.cargoId), data);
         }
-      } else if (action.type === 'ADD_BID') {
-        await syncToFirestore("bid", { ...action.bid, createdAt: Date.now() });
-      } else if (action.type === 'UPDATE_BID_STATUS') {
+
+      } else if (action.type === "UPDATE_CARGO_STATUS") {
+        const cargo = state.cargos.find((c) => c.id === action.cargoId);
+        if (cargo) {
+          const data = sanitize({ ...cargo, status: action.status, spoilageTimeMinutes: action.spoilageMinutes });
+          await setDoc(doc(db, "cargos", action.cargoId), data);
+        }
+
+      } else if (action.type === "ADD_BID") {
+        const data = sanitize({ ...action.bid, createdAt: Date.now() });
+        await setDoc(doc(db, "bids", action.bid.id), data);
+        console.log("[Firestore] ADD_BID written:", action.bid.id);
+
+      } else if (action.type === "UPDATE_BID_STATUS") {
         const bid = state.bids.find((b) => b.id === action.bidId);
         if (bid) {
-          await syncToFirestore("bid", { ...bid, status: action.status, counterPricePerKg: action.counterPrice });
+          const data = sanitize({ ...bid, status: action.status, counterPricePerKg: action.counterPrice });
+          await setDoc(doc(db, "bids", action.bidId), data);
         }
-      } else if (action.type === 'ACCEPT_BID') {
-        const bid = state.bids.find(b => b.id === action.bidId);
-        const oldCargo = state.cargos.find(c => c.id === action.cargoId);
+
+      } else if (action.type === "ACCEPT_BID") {
+        const bid = state.bids.find((b) => b.id === action.bidId);
+        const oldCargo = state.cargos.find((c) => c.id === action.cargoId);
         if (bid && oldCargo) {
-          // Accept this bid
-          await syncToFirestore("bid", { ...bid, status: "accepted" });
-          // Update cargo
           const isPartial = bid.requestedQuantityKg < oldCargo.quantityKg;
           const newQuantity = Math.max(0, oldCargo.quantityKg - bid.requestedQuantityKg);
-          await syncToFirestore("cargo", {
+
+          const batch = writeBatch(db);
+          batch.set(doc(db, "bids", action.bidId), sanitize({ ...bid, status: "accepted" }));
+
+          if (newQuantity <= 0) {
+            const otherBidsSnap = await getDocs(query(collection(db, "bids"), where("cargoId", "==", action.cargoId)));
+            otherBidsSnap.forEach((bDoc) => {
+              if (bDoc.id !== action.bidId) {
+                batch.set(bDoc.ref, { ...bDoc.data(), status: "rejected" });
+              }
+            });
+          }
+
+          batch.set(doc(db, "cargos", action.cargoId), sanitize({
             ...oldCargo,
             status: isPartial ? oldCargo.status : "rerouting",
             quantityKg: newQuantity,
-          });
+          }));
+
+          await batch.commit();
+          console.log("[Firestore] ACCEPT_BID committed:", action.bidId);
         }
-      } else if (action.type === 'MARK_DELIVERED') {
+
+      } else if (action.type === "MARK_DELIVERED") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          await syncToFirestore("cargo", { ...cargo, status: "delivered" });
+          await setDoc(doc(db, "cargos", action.cargoId), sanitize({ ...cargo, status: "delivered" }));
         }
-      } else if (action.type === 'DELETE_CARGO') {
-        await syncToFirestore("delete_cargo", { id: action.cargoId });
+
+      } else if (action.type === "DELETE_CARGO") {
+        await deleteDoc(doc(db, "cargos", action.cargoId));
+        const bidsSnap = await getDocs(query(collection(db, "bids"), where("cargoId", "==", action.cargoId)));
+        const batch = writeBatch(db);
+        bidsSnap.forEach((bDoc) => batch.delete(bDoc.ref));
+        await batch.commit();
+        console.log("[Firestore] DELETE_CARGO:", action.cargoId);
       }
     } catch (err) {
-      console.error("Firestore Sync Error:", err);
+      console.error("[Firestore] Sync Error:", err);
     }
   };
 
