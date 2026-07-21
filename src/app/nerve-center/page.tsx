@@ -4,61 +4,37 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NegotiationPit from './NegotiationPit';
 
-// Simulated translations dictionary
-const translations: Record<string, Record<string, string>> = {
-  'English': {},
-  'Hindi': {
-    'Initializing Neural Routing Core...': 'न्यूरल रूटिंग कोर आरंभ किया जा रहा है...',
-    'Scanning active fleets...': 'सक्रिय बेड़े को स्कैन किया जा रहा है...',
-    'API connection failed. Running in mock offline mode.': 'API कनेक्शन विफल। मॉक ऑफलाइन मोड में चल रहा है।',
-    'Rerouting truck': 'ट्रक को फिर से रूट किया जा रहा है',
-    'temperature spike': 'तापमान में वृद्धि',
-    'road closure': 'सड़क बंद',
-    'market surge': 'बाजार में उछाल',
-    'Anomaly detected': 'विसंगति का पता चला',
-    'Evaluating situation': 'स्थिति का मूल्यांकन किया जा रहा है',
-    'Action taken': 'कार्रवाई की गई'
-  },
-  'Japanese': {
-    'Initializing Neural Routing Core...': 'ニューラルルーティングコアを初期化しています...',
-    'Scanning active fleets...': 'アクティブなフリートをスキャンしています...',
-    'API connection failed. Running in mock offline mode.': 'API接続に失敗しました。モックオフラインモードで実行中。',
-    'Rerouting truck': 'トラックのルートを変更しています',
-    'temperature spike': '温度スパイク',
-    'road closure': '通行止め',
-    'market surge': '市場の急騰',
-    'Anomaly detected': '異常が検出されました',
-    'Evaluating situation': '状況を評価中',
-    'Action taken': '行動を起こしました'
-  },
-  'Indonesian': {
-    'Initializing Neural Routing Core...': 'Menginisialisasi Inti Perutean Neural...',
-    'Scanning active fleets...': 'Memindai armada aktif...',
-    'API connection failed. Running in mock offline mode.': 'Koneksi API gagal. Berjalan dalam mode offline tiruan.',
-    'Rerouting truck': 'Mengubah rute truk',
-    'temperature spike': 'lonjakan suhu',
-    'road closure': 'penutupan jalan',
-    'market surge': 'lonjakan pasar',
-    'Anomaly detected': 'Anomali terdeteksi',
-    'Evaluating situation': 'Mengevaluasi situasi',
-    'Action taken': 'Tindakan diambil'
+const translateViaAPI = async (text: string, targetLanguage: string) => {
+  if (targetLanguage === 'English') return text;
+  try {
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, targetLanguage })
+    });
+    const data = await res.json();
+    return data.translatedText || text;
+  } catch (err) {
+    console.error(err);
+    return text;
   }
 };
 
-const translateText = (text: string, language: string) => {
-  if (language === 'English') return text;
-  
-  const dict = translations[language];
-  if (!dict) return text;
+const TranslatedText = ({ text, language }: { text: string, language: string }) => {
+  const [translated, setTranslated] = useState(text);
 
-  let translatedText = text;
-  for (const [key, value] of Object.entries(dict)) {
-    const regex = new RegExp(key, 'gi');
-    translatedText = translatedText.replace(regex, value);
-  }
-  
-  return translatedText;
-}
+  useEffect(() => {
+    let isMounted = true;
+    const translate = async () => {
+      const result = await translateViaAPI(text, language);
+      if (isMounted) setTranslated(result);
+    };
+    translate();
+    return () => { isMounted = false; };
+  }, [text, language]);
+
+  return <>{translated}</>;
+};
 
 const AgentControlCenter = () => {
   const [logs, setLogs] = useState<{ agent: string, message: string, type: string }[]>([]);
@@ -97,7 +73,7 @@ const AgentControlCenter = () => {
         const newLog = logs[logIndex];
         setLiveLogs(prev => [...prev, newLog]);
         
-        // Trigger simulated Email if DecisionAgent or NotificationAgent takes action
+        // Trigger Email if DecisionAgent or NotificationAgent takes action
         const messageLower = newLog.message.toLowerCase();
         if (
           newLog.agent === 'DecisionAgent' || newLog.agent === 'NotificationAgent' || newLog.type === 'action'
@@ -239,7 +215,7 @@ const AgentControlCenter = () => {
                       [{log.agent}]
                     </span>
                     <span className={`${getColor(log.type, log.agent)}`}>
-                      {translateText(log.message, language)}
+                      <TranslatedText text={log.message} language={language} />
                     </span>
                   </motion.div>
                 ))}
@@ -315,7 +291,7 @@ const AgentControlCenter = () => {
           
         </div>
 
-        {/* Gmail Outbox Simulator */}
+        {/* Gmail Outbox */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -329,8 +305,31 @@ const AgentControlCenter = () => {
               </svg>
               <h3 className="text-sm font-semibold text-emerald-400 tracking-wider">Automated Email Logs (Workspace API)</h3>
             </div>
-            <div className="text-xs text-[var(--text-tertiary)]">
-              {emails.length} Sent
+            <div className="flex items-center gap-4">
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch('/api/send-alert', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        to: 'logistics.wholesaler@example.com',
+                        subject: 'Test Alert from Nerve Center',
+                        body: 'This is a test alert verifying the email integration.'
+                      })
+                    });
+                    alert('Test alert sent!');
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+                className="text-xs px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+              >
+                Send Test Alert
+              </button>
+              <div className="text-xs text-[var(--text-tertiary)]">
+                {emails.length} Sent
+              </div>
             </div>
           </div>
           <div className="p-6 overflow-y-auto flex-1 bg-black/20 custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
@@ -364,10 +363,10 @@ const AgentControlCenter = () => {
                         <div className="text-xs text-[var(--text-tertiary)]">To:</div>
                         <div className="text-sm text-blue-300 truncate">{email.to}</div>
                         <div className="text-xs text-[var(--text-tertiary)] mt-1">Subject:</div>
-                        <div className="text-sm font-semibold text-[var(--text-primary)]">{translateText(email.subject, language)}</div>
+                        <div className="text-sm font-semibold text-[var(--text-primary)]"><TranslatedText text={email.subject} language={language} /></div>
                       </div>
                       <div className="text-xs text-[var(--text-secondary)] leading-relaxed italic">
-                        "{translateText(email.body, language)}"
+                        "<TranslatedText text={email.body} language={language} />"
                       </div>
                       <div className="pt-2 text-[10px] text-[var(--text-tertiary)] text-right">
                         Sent autonomously at {email.time}

@@ -2,18 +2,18 @@
 // ANNAPURNA — Agentic AI Decision Engine (Gemini LLM Powered)
 // ============================================================
 //
-// This module integrates with the Gemini API (Gemini 1.5 Flash) via
-// /api/ai-agent to perform autonomous real-time reasoning on
-// live truck telemetry (temperature, humidity, ethylene).
-//
-// Architecture: The Gemini LLM generates the reasoning text and
-// confidence score. If the API is unavailable or times out
-// (>5s), the engine gracefully falls back to a high-performance
-// deterministic rules engine for zero-downtime reliability.
+// This module integrates with the Gemini API to perform autonomous 
+// real-time reasoning on live truck telemetry (temperature, humidity, ethylene).
+// Gemini is the PRIMARY decision engine.
+// Architecture: The Gemini LLM generates structured JSON containing the 
+// recommendation, confidence score, reasoning, and suggested market.
+// If the API is unavailable, times out (>5s), or returns invalid JSON,
+// the engine gracefully falls back to a deterministic rules engine.
 // ============================================================
 
 import { Cargo, AIDecision, Market } from "./types";
 import { calculateSpoilageTime } from "./simulator";
+import { ai, DEFAULT_MODEL } from "./vertex-client";
 
 /**
  * The Agentic AI analyzes the cargo's current state and makes an
@@ -28,63 +28,125 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
   );
 
   let geminiDecision: any = null;
+  
   try {
-    const res = await fetch('/api/ai-agent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cargo, spoilageMinutes }),
-      signal: AbortSignal.timeout(5000) // 5s timeout to not block UI
+    const prompt = `Analyze the cargo telemetry and make a routing decision.
+Cargo ID: ${cargo.id}
+Original Destination: ${cargo.originalDestination?.name || "destination"} (ETA: ${etaMinutes} min)
+Telemetry: Temperature ${telemetry.temperature}°C, Humidity ${telemetry.humidity}%, Ethylene ${telemetry.ethyleneLevel}
+Safe Temperature Max: ${safeTemperatureMax}°C
+Estimated Spoilage Time: ${spoilageMinutes} min
+
+Available Markets for Rerouting:
+${JSON.stringify(reroutableMarkets, null, 2)}
+
+Return a JSON object with this exact structure:
+{
+  "recommendation": "continue" | "reroute" | "emergency_sell",
+  "confidence": number,
+  "reasoning": "string explanation",
+  "suggestedMarketName": "string or null"
+}`;
+
+    // Simple timeout promise
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout")), 5000)
+    );
+
+    const apiCall = ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      }
     });
-    if (res.ok) {
-      geminiDecision = await res.json();
+
+    const result: any = await Promise.race([apiCall, timeout]);
+    
+    if (result && result.text) {
+        geminiDecision = JSON.parse(result.text);
     }
   } catch (e) {
-    console.warn("Gemini API fallback triggered:", e);
+    console.warn("Gemini API failed or timed out, falling back to deterministic rules:", e);
   }
 
-  // --- Decision Logic ---
+  if (geminiDecision && (geminiDecision.recommendation === 'continue' || geminiDecision.recommendation === 'reroute' || geminiDecision.recommendation === 'emergency_sell')) {
+      let suggestedMarket: Market | null = null;
+      let estimatedRecoveryPercent = 100;
+      let estimatedRecoveryValue = cargo.estimatedCargoValue;
+      
+      if (geminiDecision.suggestedMarketName && reroutableMarkets) {
+          suggestedMarket = reroutableMarkets.find(m => m.name === geminiDecision.suggestedMarketName) || null;
+          if (suggestedMarket) {
+             estimatedRecoveryPercent = calculateRecoveryPercent(suggestedMarket, spoilageMinutes);
+             estimatedRecoveryValue = Math.round(cargo.estimatedCargoValue * (estimatedRecoveryPercent / 100));
+          }
+      }
 
-  // Case 1: Temperature is safe
+      if (geminiDecision.recommendation === 'emergency_sell' && !suggestedMarket) {
+          estimatedRecoveryPercent = 20;
+          estimatedRecoveryValue = Math.round(cargo.estimatedCargoValue * 0.2);
+      } else if (geminiDecision.recommendation === 'continue') {
+          if (spoilageMinutes > (etaMinutes ?? 999)) {
+             estimatedRecoveryPercent = 90;
+             estimatedRecoveryValue = Math.round(cargo.estimatedCargoValue * 0.9);
+          } else {
+             estimatedRecoveryPercent = 100;
+             estimatedRecoveryValue = cargo.estimatedCargoValue;
+          }
+      }
+
+      return {
+        cargoId: cargo.id,
+        timestamp: Date.now(),
+        reasoning: geminiDecision.reasoning,
+        recommendation: geminiDecision.recommendation,
+        suggestedMarket: suggestedMarket,
+        estimatedRecoveryPercent: estimatedRecoveryPercent,
+        estimatedRecoveryValue: estimatedRecoveryValue,
+        confidence: geminiDecision.confidence,
+      };
+  }
+
+  // --- Deterministic Rules Logic ---
   if (telemetry.temperature <= safeTemperatureMax) {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: geminiDecision?.reasoning || `All systems nominal. Temperature ${telemetry.temperature}°C is within safe range (≤${safeTemperatureMax}°C). Humidity at ${telemetry.humidity}%. Ethylene levels: ${telemetry.ethyleneLevel}. Continuing delivery to ${cargo.originalDestination?.name || "its destination"}.`,
+      reasoning: `All systems nominal. Temperature ${telemetry.temperature}°C is within safe range (≤${safeTemperatureMax}°C). Humidity at ${telemetry.humidity}%. Ethylene levels: ${telemetry.ethyleneLevel}. Continuing delivery to ${cargo.originalDestination?.name || "its destination"}.`,
       recommendation: "continue",
       suggestedMarket: null,
       estimatedRecoveryPercent: 100,
       estimatedRecoveryValue: cargo.estimatedCargoValue,
-      confidence: geminiDecision?.confidence || 0.95,
+      confidence: 0.95,
     };
   }
 
-  // Case 2: Temperature exceeded but cargo will survive transit
   if (spoilageMinutes > (etaMinutes ?? 999)) {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: geminiDecision?.reasoning || `⚠️ WARNING: Temperature ${telemetry.temperature}°C exceeds safe limit of ${safeTemperatureMax}°C. However, estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. Cargo will survive transit. Continuing delivery with elevated monitoring.`,
+      reasoning: `WARNING: Temperature ${telemetry.temperature}°C exceeds safe limit of ${safeTemperatureMax}°C. However, estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. Cargo will survive transit. Continuing delivery with elevated monitoring.`,
       recommendation: "continue",
       suggestedMarket: null,
       estimatedRecoveryPercent: 90,
       estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * 0.9),
-      confidence: geminiDecision?.confidence || 0.75,
+      confidence: 0.75,
     };
   }
 
-  // Case 3: EMERGENCY — Cargo will spoil before arrival
   const nearestMarket = findNearestViableMarket(reroutableMarkets, spoilageMinutes);
 
   if (!nearestMarket) {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: geminiDecision?.reasoning || `🚨 CRITICAL: Cold chain failure detected. Temperature ${telemetry.temperature}°C far exceeds safe limit of ${safeTemperatureMax}°C. Ethylene levels: ${telemetry.ethyleneLevel.toUpperCase()}. Estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. NO viable markets found within spoilage window. Cargo at severe risk.`,
+      reasoning: `CRITICAL: Cold chain failure detected. Temperature ${telemetry.temperature}°C far exceeds safe limit of ${safeTemperatureMax}°C. Ethylene levels: ${telemetry.ethyleneLevel.toUpperCase()}. Estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. NO viable markets found within spoilage window. Cargo at severe risk.`,
       recommendation: "emergency_sell",
       suggestedMarket: null,
       estimatedRecoveryPercent: 20,
       estimatedRecoveryValue: Math.round(cargo.estimatedCargoValue * 0.2),
-      confidence: geminiDecision?.confidence || 0.6,
+      confidence: 0.6,
     };
   }
 
@@ -94,31 +156,15 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
   return {
     cargoId: cargo.id,
     timestamp: Date.now(),
-    reasoning: geminiDecision?.reasoning || `🚨 COLD CHAIN FAILURE DETECTED
-
-Current temperature: ${telemetry.temperature}°C — exceeds safe limit of ${safeTemperatureMax}°C
-Humidity: ${telemetry.humidity}% | Ethylene: ${telemetry.ethyleneLevel.toUpperCase()}
-ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} min
-Estimated spoilage in: ${spoilageMinutes} min
-
-⛔ Cargo WILL NOT survive transit to original destination.
-
-✅ RECOMMENDATION: Emergency reroute to ${nearestMarket.name}
-   Distance: ${nearestMarket.distanceKm} km (${nearestMarket.etaMinutes} min)
-   Estimated value recovery: ₹${recoveryValue.toLocaleString("en-IN")} of ₹${cargo.estimatedCargoValue.toLocaleString("en-IN")} (${recoveryPercent}%)
-
-Broadcasting to nearby wholesalers for immediate purchase.`,
+    reasoning: `COLD CHAIN FAILURE DETECTED\n\nCurrent temperature: ${telemetry.temperature}°C — exceeds safe limit of ${safeTemperatureMax}°C\nHumidity: ${telemetry.humidity}% | Ethylene: ${telemetry.ethyleneLevel.toUpperCase()}\nETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} min\nEstimated spoilage in: ${spoilageMinutes} min\n\nCargo WILL NOT survive transit to original destination.\n\nRECOMMENDATION: Emergency reroute to ${nearestMarket.name}\n   Distance: ${nearestMarket.distanceKm} km (${nearestMarket.etaMinutes} min)\n   Estimated value recovery: ₹${recoveryValue.toLocaleString("en-IN")} of ₹${cargo.estimatedCargoValue.toLocaleString("en-IN")} (${recoveryPercent}%)\n\nBroadcasting to nearby wholesalers for immediate purchase.`,
     recommendation: "reroute",
     suggestedMarket: nearestMarket,
     estimatedRecoveryPercent: recoveryPercent,
     estimatedRecoveryValue: recoveryValue,
-    confidence: geminiDecision?.confidence || 0.88,
+    confidence: 0.88,
   };
 }
 
-/**
- * Find the nearest market that can be reached before spoilage.
- */
 function findNearestViableMarket(
   markets: Market[],
   spoilageMinutes: number
@@ -130,13 +176,7 @@ function findNearestViableMarket(
   return viable.length > 0 ? viable[0] : null;
 }
 
-/**
- * Calculate what percentage of cargo value can be recovered
- * based on how quickly we reach the market.
- */
 function calculateRecoveryPercent(market: Market, spoilageMinutes: number): number {
-  // If we arrive with plenty of time, we recover ~80-85%
-  // The closer to spoilage, the less recovery (distress discount)
   const timeBuffer = spoilageMinutes - market.etaMinutes;
   if (timeBuffer > 60) return 85;
   if (timeBuffer > 30) return 80;

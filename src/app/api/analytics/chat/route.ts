@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // Step 1: Use Vertex AI to generate a mock SQL query and reasoning based on user input
+    // Step 1: Use Vertex AI to generate a SQL query and reasoning based on user input
     const prompt = `
       You are an AI Analyst Agent for a Cold Chain Logistics company.
       The user asks: "${message}"

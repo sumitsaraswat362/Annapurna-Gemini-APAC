@@ -14,7 +14,14 @@
     <a href="#the-15-lakh-crore-crisis">The Problem</a> •
     <a href="#our-autonomous-solution">Our Solution</a> •
     <a href="#key-features">Key Features</a> •
-    <a href="#architecture">Google Cloud Stack</a>
+    <a href="#architecture">Tech Stack</a>
+  </p>
+
+  <p>
+    <img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Google Cloud" />
+    <img src="https://img.shields.io/badge/Vertex_AI-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Vertex AI" />
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+    <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
   </p>
 </div>
 
@@ -24,60 +31,65 @@
 
 Every year, India loses over **₹1.5 Lakh Crore** to food wastage. The primary culprit? **Broken, fragmented logistics and compromised cold-chain integrity.**
 
-Traditional logistics fleets operate with blind spots. Drivers face unpredictable weather, severe traffic, and mechanical failures. By the time a refrigeration compressor fails on a transport truck, the damage is already done. The cargo spoils, the farmer loses their livelihood, and the wholesaler receives nothing. The current market relies on reactive telematics—telling managers a truck *has already broken down*. 
+Traditional logistics fleets operate with blind spots. By the time a refrigeration compressor fails on a transport truck, the damage is already done. The cargo spoils, the farmer loses their livelihood, and the wholesaler receives nothing. The current market relies on reactive telematics—telling managers a truck *has already broken down*. 
 
 ## 💡 Our Autonomous Solution
 
 **Annapurna** is an autonomous, multi-agent logistics ecosystem designed to eradicate food waste in transit. 
 
-We don't just track trucks; we actively protect perishables. By combining **Google Cloud IoT Edge Telemetry** with **Gemini 2.5 Multi-Agent Orchestration**, Annapurna continuously monitors environmental conditions. If our hardware detects a cooling failure, our AI autonomously calculates reroutes, alerts drivers in their native language, and opens an emergency bidding marketplace to sell the endangered cargo before it spoils.
+By combining real-time telemetry with a **Gemini-powered Multi-Agent Orchestration** system, Annapurna continuously monitors environmental conditions. If our system detects a cooling failure, our AI autonomously calculates reroutes, alerts managers in their native language, and opens an emergency bidding marketplace to sell the endangered cargo before it spoils.
 
 ---
 
-## ✨ Key Features (Google Cloud Gen AI Innovations)
+## ✨ Key Features & Real Integrations
 
-### 1. Multi-Agent Orchestration on Google Vertex AI (The Nerve Center)
-Instead of a simple chatbot, Annapurna is powered by a distributed Multi-Agent System hosted on **Vertex AI**. 
-*   **MonitorAgent:** Analyzes real-time IoT edge telemetry (Temp, Humidity, GPS) ingested via **Google Cloud Run**.
-*   **DecisionAgent:** Powered by **Vertex AI** and **Gemini 2.5 Function Calling** to autonomously calculate reroutes and evaluate spoilage windows when anomalies are detected.
-*   **NotificationAgent:** Integrates with the **Google Workspace API** to dispatch automated Gmail alerts to managers and push distressed cargo data directly into the marketplace.
+Annapurna is built with **9 real, verifiable Google Cloud and communication integrations**, alongside a robust modern database layer.
 
-### 2. Multi-Modal Vision & Google Document AI
-At delivery checkpoints, quality control is completely automated. We utilize **Gemini 1.5 Pro's Multi-modal Vision capabilities** (via Vertex AI) to scan physical cargo images and instantly detect rot, mold, or spoilage percentages. Simultaneously, **Google Document AI** OCR pipelines instantly digitize physical transport invoices and weighbridge receipts, eliminating manual B2B data entry.
+### 1. Vertex AI / Gemini 2.5 Flash (Primary Decision Engine)
+The core intelligence of Annapurna. It makes autonomous `continue`, `reroute`, or `emergency_sell` decisions based on live cargo telemetry. We utilize structured JSON outputs (`responseMimeType: 'application/json'`) to ensure reliable and strictly formatted AI responses.
 
-### 3. Conversational Analytics with Google BigQuery & Predictive AI
-We transformed our data warehouse into a conversational engine. Fleet managers can type plain English queries (e.g., *"Which trucks spoiled this week?"*). The Gemini model translates this into exact SQL syntax, queries our **Google BigQuery** data lake, and renders beautiful, real-time predictive forecast charts. We've heavily integrated **Vertex AI Predictive Modeling** to forecast future ESG Metrics (CO2 prevented, Farmers' revenue saved) and predict future spoilage based on historical climate data.
+### 2. Gemini Function Calling (Multi-Agent Orchestrator)
+Our orchestrated multi-agent system uses Gemini with declared function tools (e.g., `reroute_truck`, `alert_wholesaler`). This empowers the AI to move beyond chatting and trigger *real actions* across the platform autonomously.
 
-### 4. Voice AI & Localization via Dialogflow CX
-To support diverse drivers across rural India, we integrated a **Google Dialogflow CX Voice widget** backed by the **Google Cloud Translation API**. This allows drivers to interact with cutting-edge AI dispatchers entirely via voice in regional languages like Hindi, Marathi, and Tamil. 
+### 3. Gemini 1.5 Pro Vision (Cargo Quality Inspection)
+Quality control is automated via multi-modal vision. Drivers upload photographs of the cargo, and Gemini Vision instantly scans the image to detect spoilage percentages, rot, or mold.
 
-### 5. The Emergency Wholesaler Marketplace (Powered by Firestore)
-When a cold-chain failure is unavoidable, the AI pushes the distressed cargo to a live, geo-fenced smart marketplace built on **Google Cloud Firestore**. Nearby wholesalers can bid on the cargo instantly in real-time. Firestore's low-latency syncing ensures the food is rescued rapidly, and economic value is recovered for the farmers.
+### 4. Google BigQuery (Conversational Analytics & Forecasting)
+We've integrated a real `annapurna_telemetry.truck_telemetry` dataset. Fleet managers can ask plain English questions; Gemini translates them into SQL and executes them against the *actual* BigQuery table. We also utilize BigQuery for ARIMA forecasting on telemetry data.
+
+### 5. Google Cloud Firestore (Real-Time State Management)
+Operating in native mode, Firestore powers our real-time updates. Critical events like `alerts`, `cargo_states`, and `marketplace_listings` are actively written to and synced from real Firestore collections.
+
+### 6. Google Cloud Translation API (Vernacular Localization)
+To support a diverse workforce, our Nerve Center translates agent logs and alerts into Hindi, Marathi, Tamil, and Telugu using the actual `@google-cloud/translate` v2 API.
+
+### 7. Google Document AI (Invoice Digitization)
+We use the real `@google-cloud/documentai` integration with an auto-processor creation pipeline. It instantly digitizes uploaded transport invoices via OCR, with a fallback to Gemini Vision if needed.
+
+### 8. Nodemailer + Gmail SMTP (Automated Alerts)
+When emergency cargo reroutes or sales are triggered, the NotificationAgent dispatches actual email alerts to stakeholders via Gmail SMTP (or Ethereal test accounts).
+
+### 9. Supabase (Primary Relational Database)
+Working alongside Firestore, Supabase provides our robust PostgreSQL backend. It handles secure user authentication, complex cargo tracking states, and persistent marketplace data.
 
 ---
 
-## ⚙️ The Google Cloud Stack Architecture
+## ⚙️ The Architecture (Vercel + Google Cloud)
 
-Annapurna is built for enterprise scale, utilizing the full breadth of the **Google Cloud ecosystem** for extreme reliability and AI intelligence.
-
-*   **Compute:** Google Cloud Run (Serverless, auto-scaling microservices)
-*   **AI/ML Engine:** Google Vertex AI (Gemini 2.5, Gemini 1.5 Pro Vision, Predictive AI)
-*   **Databases:** Google Firestore (Real-time marketplace syncing) & Google BigQuery (Enterprise Data Lake for analytics)
-*   **Applied AI:** Google Document AI (Invoice OCR) & Dialogflow CX (Voice bots)
-*   **Integrations:** Google Workspace APIs (Gmail alerts), Cloud Translation API (Vernacular localization)
+Annapurna runs on a modern serverless edge architecture via **Vercel**, leveraging the full breadth of the **Google Cloud ecosystem** for extreme reliability and AI intelligence.
 
 ```mermaid
 graph TD
-    A[IoT Edge Sensors] -->|Telemetry| B(Cloud Run)
-    B --> C{Firestore Real-time DB}
-    C --> D[Multi-Agent Nerve Center]
-    D -->|Function Calling| E(Vertex AI / Gemini 2.5)
-    E --> F[Workspace API / Gmail]
-    E --> G[Wholesaler Marketplace]
-    C --> H[(BigQuery)]
-    H -->|Conversational SQL| I[Analytics Dashboard]
-    J[Cargo Images] --> K(Vision AI / Document AI)
-    K --> G
+    A[IoT Edge / User Input] -->|Telemetry & Requests| B(Vercel Edge API)
+    B --> C{Supabase PostgreSQL}
+    B --> D{Firestore Real-time DB}
+    D --> E[Multi-Agent Orchestrator]
+    E -->|Function Calling / JSON| F(Vertex AI / Gemini 2.5 Flash)
+    F --> G[Gmail SMTP Alerts]
+    F --> H[Wholesaler Marketplace]
+    I[(BigQuery Telemetry)] -->|Conversational SQL / ARIMA| J[Analytics Dashboard]
+    K[Cargo Images & Invoices] --> L(Gemini Vision & Document AI)
+    L --> C
 ```
 
 <div align="center">

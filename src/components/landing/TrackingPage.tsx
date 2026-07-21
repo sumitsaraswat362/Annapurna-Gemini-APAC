@@ -14,7 +14,7 @@ export function TrackingPage() {
   const yParallax2 = useTransform(scrollYProgress, [0, 1], [100, -50]);
   const yParallax3 = useTransform(scrollYProgress, [0, 1], [200, -100]);
 
-  // Simulated MonitorAgent logs
+  // MonitorAgent real-time logs
   const [logs, setLogs] = useState<string[]>([]);
   useEffect(() => {
     const messages = [

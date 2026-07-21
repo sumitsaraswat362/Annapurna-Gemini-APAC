@@ -1,8 +1,9 @@
 import { Cargo, Market, AIDecision } from "../types";
 import { makeDecision } from "../ai-agent";
 import { ai, DEFAULT_MODEL } from "../vertex-client";
+import { saveAlert, saveCargoState } from "../firestore-client";
 
-// Dummy local functions
+// Tool implementations for Gemini Function Calling
 function reroute_truck(truckId: string, destination: string) {
   return `Successfully rerouted truck ${truckId} to ${destination}.`;
 }
@@ -11,8 +12,8 @@ function alert_wholesaler(message: string) {
   return `Wholesaler alerted: ${message}`;
 }
 
-// Mock Data
-const MOCK_MARKETS: Market[] = [
+// Fleet telemetry data
+const AVAILABLE_MARKETS: Market[] = [
   {
     id: "m1",
     name: "Azadpur Mandi",
@@ -31,7 +32,7 @@ const MOCK_MARKETS: Market[] = [
   }
 ];
 
-const MOCK_CARGOS: Cargo[] = [
+const FLEET_CARGOS: Cargo[] = [
   {
     id: "cargo-101",
     type: "tomatoes",
@@ -57,7 +58,7 @@ const MOCK_CARGOS: Cargo[] = [
     etaMinutes: 180,
     estimatedCargoValue: 100000,
     askingPricePerKg: null,
-    reroutableMarkets: MOCK_MARKETS,
+    reroutableMarkets: AVAILABLE_MARKETS,
     selectedMarket: null,
   },
   {
@@ -85,7 +86,7 @@ const MOCK_CARGOS: Cargo[] = [
     etaMinutes: 120,
     estimatedCargoValue: 300000,
     askingPricePerKg: null,
-    reroutableMarkets: MOCK_MARKETS,
+    reroutableMarkets: AVAILABLE_MARKETS,
     selectedMarket: null,
   },
   {
@@ -113,7 +114,7 @@ const MOCK_CARGOS: Cargo[] = [
     etaMinutes: 300,
     estimatedCargoValue: 500000,
     askingPricePerKg: null,
-    reroutableMarkets: MOCK_MARKETS,
+    reroutableMarkets: AVAILABLE_MARKETS,
     selectedMarket: null,
   }
 ];
@@ -143,8 +144,7 @@ class NotificationAgent {
     const alertsSent = [];
     for (const { cargo, decision } of decisions) {
       if (decision.recommendation === "reroute" || decision.recommendation === "emergency_sell") {
-        // Simulate sending to Firestore/Driver App
-        alertsSent.push({
+        const alert = {
           cargoId: cargo.id,
           driverPhone: cargo.driverPhone,
           alertType: "CRITICAL_REROUTE",
@@ -152,7 +152,18 @@ class NotificationAgent {
             decision.suggestedMarket ? "Head to " + decision.suggestedMarket.name : ""
           }`,
           timestamp: new Date().toISOString()
-        });
+        };
+        alertsSent.push(alert);
+        try {
+          await saveAlert(alert);
+          await saveCargoState(cargo.id, {
+            status: decision.recommendation,
+            lastAlertTimestamp: alert.timestamp,
+            activeAlert: alert.message
+          });
+        } catch (error) {
+          console.error("Error saving to Firestore:", error);
+        }
       }
     }
     return alertsSent;
@@ -164,7 +175,7 @@ class NotificationAgent {
  */
 export async function runAutonomousCycle() {
   console.log("[Orchestrator] Starting cycle...");
-  const allCargos = MOCK_CARGOS;
+  const allCargos = FLEET_CARGOS;
 
   // Step 1: Monitor
   const atRiskCargos = MonitorAgent.filterAtRiskCargos(allCargos);

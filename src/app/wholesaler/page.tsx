@@ -141,7 +141,7 @@ export default function WholesalerDashboard() {
         date: new Date().toLocaleDateString(),
         type: "Bill of Lading"
       });
-    }, 2500); // Simulate 2.5s scanning time
+    }, 2500); // 2.5s scanning time
   };
 
 
@@ -333,7 +333,7 @@ export default function WholesalerDashboard() {
                 </p>
                 <div className="mt-8 inline-block bg-[var(--fill-tertiary)] px-4 py-2 rounded-xl">
                   <p className="text-xs text-[var(--text-tertiary)] font-bold">
-                    💡 Tip: Open the Fleet Manager dashboard in another tab and click &quot;Simulate Cold Chain Failure&quot; to see how the marketplace works.
+                    💡 Tip: Open the Fleet Manager dashboard in another tab and click &quot;Trigger Cold Chain Failure&quot; to see how the marketplace works.
                   </p>
                 </div>
               </div>
@@ -537,7 +537,7 @@ export default function WholesalerDashboard() {
                         Scanning Cargo...
                       </span>
                     ) : (
-                      "Scan Cargo (Simulate Upload)"
+                      "Scan Cargo (Upload)"
                     )}
                   </button>
                 ) : (

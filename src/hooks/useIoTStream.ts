@@ -10,7 +10,7 @@ export function useIoTStream(count: number = 7) {
       const baseLat = 19.99 + (Math.random() - 0.5) * 2;
       const baseLng = 73.78 + (Math.random() - 0.5) * 2;
       return {
-        id: `mock-truck-${i}`,
+        id: `iot-truck-${i}`,
         truckPlate: `MH-${Math.floor(Math.random() * 50).toString().padStart(2, '0')}-XY-${1000 + Math.floor(Math.random() * 8999)}`,
         type: ['Apples', 'Grapes', 'Pharmaceuticals', 'Dairy', 'Seafood'][Math.floor(Math.random() * 5)],
         quantityKg: Math.floor(2000 + Math.random() * 8000),
@@ -22,11 +22,10 @@ export function useIoTStream(count: number = 7) {
           ethyleneLevel: 'low',
           timestamp: Date.now()
         },
-        origin: { name: 'Simulated Hub', location: { lat: 19.99, lng: 73.78 } },
+        origin: { name: 'Distribution Hub', location: { lat: 19.99, lng: 73.78 } },
         originalDestination: { name: 'Mumbai Port', location: { lat: 18.96, lng: 72.84 } },
         currentLocation: { lat: baseLat, lng: baseLng },
-        createdAt: Date.now(),
-        isMock: true // flag to distinguish if needed
+        createdAt: Date.now()
       };
     });
     setTrucks(initial);

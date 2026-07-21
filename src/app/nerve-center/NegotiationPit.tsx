@@ -41,7 +41,7 @@ export default function NegotiationPit() {
       
       const data = await res.json();
       
-      // Simulate live typing
+      // Live typing animation
       const negotiation = data.negotiation;
       let i = 0;
       setMessages(negotiation);

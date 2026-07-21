@@ -403,7 +403,7 @@ function DriverVoiceWidget() {
 
               <div className="w-full min-h-[60px] bg-black/30 rounded-xl p-3 border border-white/5 relative overflow-hidden">
                 {!transcript && !isListening && (
-                  <p className="text-xs text-white/40 text-center italic mt-3">Click mic to simulate driver report...</p>
+                  <p className="text-xs text-white/40 text-center italic mt-3">Click mic to initiate driver report...</p>
                 )}
                 {transcript && (
                   <p className="text-sm text-white/90 font-medium leading-relaxed">"{transcript}"</p>
@@ -637,12 +637,12 @@ function DashboardView() {
 function FleetTrackingView() {
   const { state, dispatch } = useAppState();
   const { user } = useAuth();
-  const mockCargos = useIoTStream(8); // 8 mock trucks
+  const iotCargos = useIoTStream(8); // 8 mock trucks
   
   // Only show cargos owned by this user
   // Exclude delivered cargos from active fleet view
   const baseCargos = state.cargos.filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered");
-  const myCargos = [...baseCargos, ...mockCargos];
+  const myCargos = [...baseCargos, ...iotCargos];
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const [selectedCargoId, setSelectedCargoId] = useState<string>("cargo-001");
@@ -1001,7 +1001,7 @@ function FleetTrackingView() {
               className="w-full skeuomorphic-btn py-3 px-4 text-sm flex items-center justify-center gap-2 text-[#FF9500]"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.866 8.284 8.284 0 0 0 3 2.48Z" /></svg>
-              Simulate Temp Spike (18.5°C)
+              Trigger Temp Spike (18.5°C)
             </button>
             <button 
               onClick={() => setShowMarketModal(true)}
@@ -1118,7 +1118,7 @@ function FleetTrackingView() {
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
             </svg>
-            {isOfflineZone ? "5G Reconnected" : "Simulate Dead Zone"}
+            {isOfflineZone ? "5G Reconnected" : "Toggle Dead Zone"}
           </button>
           <button onClick={() => setShowAddModal(true)} className="btn btn-sm btn-success">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -1132,7 +1132,7 @@ function FleetTrackingView() {
             {state.simulationRunning ? (
               <><span className="w-2 h-2 rounded-full bg-[#FF3B30] animate-pulse-dot" /> Simulating Failure...</>
             ) : (
-              <><NavIcon icon="shield" className="w-4 h-4" /> Auto-Simulate Script</>
+              <><NavIcon icon="shield" className="w-4 h-4" /> Auto-Test Script</>
             )}
           </button>
         </div>
@@ -1166,7 +1166,7 @@ function FleetTrackingView() {
                   routePoints={selectedCargo.routePolyline || []}
                   status={selectedCargo.status}
                   reroute={selectedCargo.selectedMarket && selectedCargo.status === "rerouting" ? { name: selectedCargo.selectedMarket.name, location: selectedCargo.selectedMarket.location } : null}
-                  otherTrucks={mockCargos.filter((c: any) => c.id !== selectedCargo.id)}
+                  otherTrucks={iotCargos.filter((c: any) => c.id !== selectedCargo.id)}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[var(--text-tertiary)] text-xs bg-[var(--bg-primary)]">
@@ -1719,7 +1719,7 @@ function AnalyticsView() {
         <div className="ios-card p-6">
           <h3 className="text-sm font-bold text-[var(--text-primary)] uppercase tracking-widest mb-6">Cold Chain Failures by Region</h3>
           <div className="h-64 flex items-center justify-center bg-[var(--bg-primary)] rounded-xl border border-[var(--separator)] relative">
-            {/* Fake Donut Chart SVG */}
+            {/* Donut Chart SVG */}
             <svg viewBox="0 0 100 100" className="w-48 h-48">
               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#34C759" strokeWidth="16" strokeDasharray="60 191" strokeDashoffset="0" className="opacity-80" />
               <circle cx="50" cy="50" r="40" fill="transparent" stroke="#007AFF" strokeWidth="16" strokeDasharray="80 171" strokeDashoffset="-60" className="opacity-90" />

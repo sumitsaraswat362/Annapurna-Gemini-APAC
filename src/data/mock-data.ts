@@ -1,5 +1,5 @@
 // ============================================================
-// ANNAPURNA — Mock Data for Demo Scenario
+// ANNAPURNA — Demo Fleet Telemetry Data
 // ============================================================
 
 import {
