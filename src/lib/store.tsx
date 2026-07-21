@@ -55,7 +55,8 @@ type Action =
   | { type: "SET_CARGOS"; cargos: Cargo[] }
   | { type: "SET_BIDS"; bids: Bid[] }
   | { type: "MARK_DELIVERED"; cargoId: string }
-  | { type: "DELETE_CARGO"; cargoId: string };
+  | { type: "DELETE_CARGO"; cargoId: string }
+  | { type: "SET_FULL_STATE"; state: AppState };
 
 // --- Reducer ---
 function appReducer(state: AppState, action: Action): AppState {
@@ -270,6 +271,9 @@ function appReducer(state: AppState, action: Action): AppState {
         cargos: state.cargos.filter((c) => c.id !== action.cargoId),
       };
 
+    case "SET_FULL_STATE":
+      return action.state;
+
     default:
       return state;
   }
@@ -283,6 +287,7 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, { ...initialState, cargos: [], bids: [] });
+  const isInitialized = React.useRef(false);
 
   React.useEffect(() => {
     // 1. Initial Fetch
@@ -328,7 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     fetchInitialData();
 
-    // 2. Real-time Subscriptions
+    // 2. Real-time Subscriptions (if Supabase is configured)
     const cargoSub = supabase.channel('cargos-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cargos' }, fetchInitialData)
       .subscribe();
@@ -337,11 +342,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bids' }, fetchInitialData)
       .subscribe();
 
+    // 3. LocalStorage cross-tab sync (fallback for when Supabase is unconfigured)
+    const saved = localStorage.getItem('annapurna_state');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        dispatch({ type: 'SET_FULL_STATE', state: parsed });
+      } catch(e) {}
+    }
+    isInitialized.current = true;
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'annapurna_state' && e.newValue) {
+        try {
+          const newState = JSON.parse(e.newValue);
+          dispatch({ type: 'SET_FULL_STATE', state: newState });
+        } catch(e) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
     return () => {
       supabase.removeChannel(cargoSub);
       supabase.removeChannel(bidSub);
+      window.removeEventListener('storage', handleStorage);
     };
   }, []);
+
+  // Persist state changes to localStorage
+  const isFirstRender = React.useRef(true);
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    localStorage.setItem('annapurna_state', JSON.stringify(state));
+  }, [state]);
 
   // Middleware Dispatch to push to Supabase
   const asyncDispatch = async (action: Action) => {
