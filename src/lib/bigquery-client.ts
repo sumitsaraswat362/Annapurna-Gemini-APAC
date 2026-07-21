@@ -41,13 +41,27 @@ export async function getARIMAForecast(): Promise<ForecastDataPoint[]> {
     
     if (rows && rows.length > 0) {
       console.log('[BigQuery ML] ARIMA forecast returned', rows.length, 'rows');
-      return rows.map((row: any) => ({
-        date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : String(row.date).split('T')[0],
-        predicted_spoilage_risk: typeof row.predicted_risk === 'number'
-          ? Math.min(100, Math.max(0, row.predicted_risk))
-          : parseFloat(row.predicted_risk) || 15,
-        anomaly: (row.upper_bound - row.lower_bound) > 20,
-      }));
+      return rows.map((row: any) => {
+        // Handle BigQueryTimestamp { value: '...' } objects
+        let dateStr: string;
+        if (row.date && typeof row.date === 'object' && 'value' in row.date) {
+          dateStr = String(row.date.value).split('T')[0];
+        } else if (row.date instanceof Date) {
+          dateStr = row.date.toISOString().split('T')[0];
+        } else {
+          dateStr = String(row.date).split('T')[0];
+        }
+
+        const risk = typeof row.predicted_risk === 'number' ? row.predicted_risk : parseFloat(String(row.predicted_risk)) || 15;
+        const lower = typeof row.lower_bound === 'number' ? row.lower_bound : parseFloat(String(row.lower_bound)) || 0;
+        const upper = typeof row.upper_bound === 'number' ? row.upper_bound : parseFloat(String(row.upper_bound)) || 0;
+
+        return {
+          date: dateStr,
+          predicted_spoilage_risk: Math.min(100, Math.max(0, parseFloat(risk.toFixed(2)))),
+          anomaly: (upper - lower) > 5,
+        };
+      });
     }
   } catch (e) {
     console.warn('[BigQuery ML] ARIMA model not available, trying raw aggregation:', (e as Error).message);
