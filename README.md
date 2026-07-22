@@ -239,5 +239,5 @@ gcloud run deploy annapurna-web --source . --region us-central1 --allow-unauthen
   
   <br/><br/>
   
-  <sub>Built with ❤️ for Google Cloud Gen AI Academy APAC · Cohort 1</sub>
+  <sub>Built with ❤️ for Google Cloud Gen AI Academy APAC · Cohort 2</sub>
 </div>
