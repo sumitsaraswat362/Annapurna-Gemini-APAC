@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
 import { db } from "./firebase";
-import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, query, where, writeBatch } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import {
   Cargo,
   Bid,
@@ -364,30 +364,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
-  // Middleware: update local state optimistically, then write to Firestore
+  const postToFirestore = async (type: string, data: any) => {
+    const res = await fetch("/api/firestore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, data }),
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to POST to firestore: ${res.statusText}`);
+    }
+  };
+
+  // Middleware: update local state optimistically, then write to Firestore via server API
   const asyncDispatch = async (action: Action) => {
     dispatch(action); // Optimistic local update
 
     try {
       if (action.type === "ADD_CARGO") {
         const data = sanitize({ ...action.cargo, createdAt: Date.now() });
-        await setDoc(doc(db, "cargos", action.cargo.id), data);
-        console.log("[Firestore] ADD_CARGO written:", action.cargo.id);
+        await postToFirestore("cargo", data);
 
       } else if (action.type === "SET_ASKING_PRICE") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
           const data = sanitize({ ...cargo, askingPricePerKg: action.pricePerKg, createdAt: Date.now() });
-          await setDoc(doc(db, "cargos", action.cargoId), data);
-          console.log("[Firestore] SET_ASKING_PRICE written:", action.cargoId);
+          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "BROADCAST_TO_MARKETPLACE") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
           const data = sanitize({ ...cargo, status: "emergency", createdAt: Date.now() });
-          await setDoc(doc(db, "cargos", action.cargoId), data);
-          console.log("[Firestore] BROADCAST_TO_MARKETPLACE written:", action.cargoId);
+          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "TRIGGER_MANUAL_EMERGENCY") {
@@ -399,78 +407,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
             telemetry: { ...cargo.telemetry, temperature: action.newTemperature },
             createdAt: Date.now(),
           });
-          await setDoc(doc(db, "cargos", action.cargoId), data);
-          console.log("[Firestore] TRIGGER_MANUAL_EMERGENCY written:", action.cargoId);
+          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "UPDATE_TELEMETRY") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
           const data = sanitize({ ...cargo, telemetry: action.telemetry });
-          await setDoc(doc(db, "cargos", action.cargoId), data);
+          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "UPDATE_CARGO_STATUS") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
           const data = sanitize({ ...cargo, status: action.status, spoilageTimeMinutes: action.spoilageMinutes });
-          await setDoc(doc(db, "cargos", action.cargoId), data);
+          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "ADD_BID") {
         const data = sanitize({ ...action.bid, createdAt: Date.now() });
-        await setDoc(doc(db, "bids", action.bid.id), data);
-        console.log("[Firestore] ADD_BID written:", action.bid.id);
+        await postToFirestore("bid", data);
 
       } else if (action.type === "UPDATE_BID_STATUS") {
         const bid = state.bids.find((b) => b.id === action.bidId);
         if (bid) {
           const data = sanitize({ ...bid, status: action.status, counterPricePerKg: action.counterPrice });
-          await setDoc(doc(db, "bids", action.bidId), data);
+          await postToFirestore("bid", data);
         }
 
       } else if (action.type === "ACCEPT_BID") {
-        const bid = state.bids.find((b) => b.id === action.bidId);
-        const oldCargo = state.cargos.find((c) => c.id === action.cargoId);
-        if (bid && oldCargo) {
-          const isPartial = bid.requestedQuantityKg < oldCargo.quantityKg;
-          const newQuantity = Math.max(0, oldCargo.quantityKg - bid.requestedQuantityKg);
-
-          const batch = writeBatch(db);
-          batch.set(doc(db, "bids", action.bidId), sanitize({ ...bid, status: "accepted" }));
-
-          if (newQuantity <= 0) {
-            const otherBidsSnap = await getDocs(query(collection(db, "bids"), where("cargoId", "==", action.cargoId)));
-            otherBidsSnap.forEach((bDoc) => {
-              if (bDoc.id !== action.bidId) {
-                batch.set(bDoc.ref, { ...bDoc.data(), status: "rejected" });
-              }
-            });
-          }
-
-          batch.set(doc(db, "cargos", action.cargoId), sanitize({
-            ...oldCargo,
-            status: isPartial ? oldCargo.status : "rerouting",
-            quantityKg: newQuantity,
-          }));
-
-          await batch.commit();
-          console.log("[Firestore] ACCEPT_BID committed:", action.bidId);
-        }
+        await postToFirestore("accept_bid", { bidId: action.bidId, cargoId: action.cargoId });
 
       } else if (action.type === "MARK_DELIVERED") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          await setDoc(doc(db, "cargos", action.cargoId), sanitize({ ...cargo, status: "delivered" }));
+          const data = sanitize({ ...cargo, status: "delivered" });
+          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "DELETE_CARGO") {
-        await deleteDoc(doc(db, "cargos", action.cargoId));
-        const bidsSnap = await getDocs(query(collection(db, "bids"), where("cargoId", "==", action.cargoId)));
-        const batch = writeBatch(db);
-        bidsSnap.forEach((bDoc) => batch.delete(bDoc.ref));
-        await batch.commit();
-        console.log("[Firestore] DELETE_CARGO:", action.cargoId);
+        await postToFirestore("delete_cargo", { id: action.cargoId });
       }
     } catch (err) {
       console.error("[Firestore] Sync Error:", err);
