@@ -9,7 +9,7 @@
   <h3>Autonomous Multi-Agent AI · Emergency Cargo Rescue · Real-Time Cold-Chain Intelligence</h3>
   
   <p>
-    <strong>Built for Google Cloud Gen AI Academy APAC · Cohort 1</strong><br>
+    <strong>Built for Google Cloud Gen AI Academy APAC · Cohort 2</strong><br>
     <em>Minimizing waste. Maximizing efficiency. Saving the harvest.</em>
   </p>
   
