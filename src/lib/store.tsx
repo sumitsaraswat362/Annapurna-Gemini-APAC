@@ -48,7 +48,7 @@ export interface AppState {
 }
 
 const initialState: AppState = {
-  cargos: FLEET_CARGOS,
+  cargos: [],
   bids: [],
   aiDecisions: [],
   notifications: [],
@@ -296,13 +296,11 @@ function appReducer(state: AppState, action: Action): AppState {
     case "SET_FULL_STATE":
       return action.state;
 
+    // MERGE_FIRESTORE_CARGOS is deprecated — we now use SET_CARGOS directly
     case "MERGE_FIRESTORE_CARGOS": {
-      // Merge: Firestore cargos override local ones by id; keep local-only cargos too
-      const firestoreIds = new Set(action.firestoreCargos.map(c => c.id));
-      const localOnly = state.cargos.filter(c => !firestoreIds.has(c.id));
       return {
         ...state,
-        cargos: [...action.firestoreCargos, ...localOnly],
+        cargos: action.firestoreCargos,
       };
     }
 
@@ -326,15 +324,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const cargosRef = collection(db, "cargos");
     const bidsRef = collection(db, "bids");
 
-    // Real-time listener for cargos
+    // Real-time listener for cargos — Firestore is the SINGLE source of truth
     const unsubCargos = onSnapshot(cargosRef, (snapshot) => {
       firestoreReady.current = true;
       const cargos = snapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Cargo[];
       console.log("[Firestore] onSnapshot cargos:", cargos.length, "docs");
-      // MERGE Firestore cargos with local mock cargos (keep local ones that aren't in Firestore)
-      dispatch({ type: "MERGE_FIRESTORE_CARGOS", firestoreCargos: cargos });
+      if (cargos.length > 0) {
+        // Use ONLY Firestore data — no stale mock data
+        dispatch({ type: "SET_CARGOS", cargos });
+      } else {
+        // Fallback: if Firestore is empty, show demo cargos so the UI isn't blank
+        dispatch({ type: "SET_CARGOS", cargos: FLEET_CARGOS });
+      }
     }, (err) => {
       console.error("Firestore cargos listener error:", err);
+      // On error, fall back to mock data so the app still works
+      dispatch({ type: "SET_CARGOS", cargos: FLEET_CARGOS });
     });
 
     // Real-time listener for bids
