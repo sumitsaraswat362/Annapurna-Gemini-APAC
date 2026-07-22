@@ -54,7 +54,7 @@ export default function WholesalerDashboard() {
 
   const emergencyCargos = emergencyCargosRaw
     .map(c => ({ ...c, quantityKg: getAvailableQuantity(c.id, c.quantityKg) }))
-    .filter(c => c.quantityKg > 0);
+    .filter(c => c.quantityKg > 0 && !isNaN(c.quantityKg));
 
   const { user, logout } = useAuth();
   
@@ -69,7 +69,7 @@ export default function WholesalerDashboard() {
 
   const upcomingCargos = upcomingCargosRaw
     .map(c => ({ ...c, quantityKg: getAvailableQuantity(c.id, c.quantityKg) }))
-    .filter(c => c.quantityKg > 0);
+    .filter(c => c.quantityKg > 0 && !isNaN(c.quantityKg));
 
   const totalOffers = emergencyCargos.length + upcomingCargos.length;
 

@@ -89,7 +89,7 @@ export default function FleetApp() {
 
 
   // Derived state for sidebar badges
-  const emergencyCount = state.cargos.filter((c) => c.status === "emergency" || c.status === "rerouting").length;
+  const emergencyCount = state.cargos.filter((c) => (c.status === "emergency" || c.status === "rerouting") && c.quantityKg > 0 && !isNaN(c.quantityKg)).length;
   const newBidsCount = state.bids.filter((b) => b.status === "pending").length;
   const unreadAlerts = state.notifications.filter((n) => !n.read).length;
 
@@ -562,8 +562,8 @@ function DashboardView() {
   const { state } = useAppState();
   const { user } = useAuth();
   
-  // Only show cargos owned by this user
-  const myCargos = state.cargos.filter(c => !c.ownerId || c.ownerId === user?.name);
+  // Only show cargos owned by this user and that have a valid positive quantity
+  const myCargos = state.cargos.filter(c => (!c.ownerId || c.ownerId === user?.name) && c.quantityKg > 0 && !isNaN(c.quantityKg));
 
   const totalCargos = myCargos.length;
   const totalValue = myCargos.reduce((acc, c) => acc + c.estimatedCargoValue, 0);
@@ -725,7 +725,7 @@ function FleetTrackingView() {
   // Only show cargos owned by this user
   // Exclude delivered cargos from active fleet view
   const baseCargos = state.cargos
-    .filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered")
+    .filter(c => (!c.ownerId || c.ownerId === user?.name) && c.status !== "delivered" && c.quantityKg > 0 && !isNaN(c.quantityKg))
     .map(c => ({
       ...c,
       origin: c.origin || { name: 'Distribution Hub', location: { lat: 19.99, lng: 73.78 } },
