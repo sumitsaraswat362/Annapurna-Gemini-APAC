@@ -394,65 +394,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await postToFirestore("cargo", data);
 
       } else if (action.type === "SET_ASKING_PRICE") {
-        const cargo = state.cargos.find((c) => c.id === action.cargoId);
-        if (cargo) {
-          const data = sanitize({ ...cargo, askingPricePerKg: action.pricePerKg, createdAt: Date.now() });
-          await postToFirestore("cargo", data);
-        }
+        await postToFirestore("cargo", { id: action.cargoId, askingPricePerKg: action.pricePerKg });
 
       } else if (action.type === "BROADCAST_TO_MARKETPLACE") {
-        const cargo = state.cargos.find((c) => c.id === action.cargoId);
-        if (cargo) {
-          const data = sanitize({ ...cargo, status: "emergency", createdAt: Date.now() });
-          await postToFirestore("cargo", data);
-        }
+        await postToFirestore("cargo", { id: action.cargoId, status: "emergency" });
 
       } else if (action.type === "TRIGGER_MANUAL_EMERGENCY") {
         const cargo = state.cargos.find((c) => c.id === action.cargoId);
         if (cargo) {
-          const data = sanitize({
-            ...cargo,
+          await postToFirestore("cargo", { 
+            id: action.cargoId, 
             status: "emergency",
-            telemetry: { ...cargo.telemetry, temperature: action.newTemperature },
-            createdAt: Date.now(),
+            telemetry: { ...cargo.telemetry, temperature: action.newTemperature }
           });
-          await postToFirestore("cargo", data);
         }
 
       } else if (action.type === "UPDATE_TELEMETRY") {
-        const cargo = state.cargos.find((c) => c.id === action.cargoId);
-        if (cargo) {
-          const data = sanitize({ ...cargo, telemetry: action.telemetry });
-          await postToFirestore("cargo", data);
-        }
+        await postToFirestore("cargo", { id: action.cargoId, telemetry: action.telemetry });
 
       } else if (action.type === "UPDATE_CARGO_STATUS") {
-        const cargo = state.cargos.find((c) => c.id === action.cargoId);
-        if (cargo) {
-          const data = sanitize({ ...cargo, status: action.status, spoilageTimeMinutes: action.spoilageMinutes });
-          await postToFirestore("cargo", data);
-        }
+        await postToFirestore("cargo", { id: action.cargoId, status: action.status, spoilageTimeMinutes: action.spoilageMinutes });
+
 
       } else if (action.type === "ADD_BID") {
         const data = sanitize({ ...action.bid, createdAt: Date.now() });
         await postToFirestore("bid", data);
 
       } else if (action.type === "UPDATE_BID_STATUS") {
-        const bid = state.bids.find((b) => b.id === action.bidId);
-        if (bid) {
-          const data = sanitize({ ...bid, status: action.status, counterPricePerKg: action.counterPrice });
-          await postToFirestore("bid", data);
-        }
+        await postToFirestore("bid", { id: action.bidId, status: action.status, counterPricePerKg: action.counterPrice });
 
       } else if (action.type === "ACCEPT_BID") {
         await postToFirestore("accept_bid", { bidId: action.bidId, cargoId: action.cargoId });
 
       } else if (action.type === "MARK_DELIVERED") {
-        const cargo = state.cargos.find((c) => c.id === action.cargoId);
-        if (cargo) {
-          const data = sanitize({ ...cargo, status: "delivered" });
-          await postToFirestore("cargo", data);
-        }
+        await postToFirestore("cargo", { id: action.cargoId, status: "delivered" });
+
 
       } else if (action.type === "DELETE_CARGO") {
         await postToFirestore("delete_cargo", { id: action.cargoId });
