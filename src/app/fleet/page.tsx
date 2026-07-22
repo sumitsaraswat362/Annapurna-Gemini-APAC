@@ -789,8 +789,9 @@ function FleetTrackingView() {
 
   // Add Cargo Form States
   const [newPlate, setNewPlate] = useState("MH-04-XX-9999");
-  const [newType, setNewType] = useState("Apples");
-  const [newQty, setNewQty] = useState(5000);
+  const [newType, setNewType] = useState("tomatoes");
+  const [newQty, setNewQty] = useState<number | string>(5000);
+
   const [newOrigin, setNewOrigin] = useState("");
 
   // Market Listing States
@@ -1580,7 +1581,8 @@ function FleetTrackingView() {
                 </div>
                 <div>
                   <label className="text-xs font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-1 block">Quantity (kg)</label>
-                  <input type="number" value={newQty} onChange={(e) => setNewQty(Number(e.target.value))} className="ios-input font-[family-name:var(--font-mono)] text-sm" />
+                  <input type="number" value={newQty} onChange={(e) => setNewQty(e.target.value === '' ? '' : Number(e.target.value))} className="ios-input font-[family-name:var(--font-mono)] text-sm" />
+
                 </div>
               </div>
               <button 
@@ -1592,9 +1594,10 @@ function FleetTrackingView() {
                       ownerId: user?.name || "Logistics",
                       truckPlate: newPlate,
                       type: newType as CargoType,
-                      quantityKg: newQty,
-                      estimatedCargoValue: newQty * 50,
+                      quantityKg: Number(newQty) || 5000,
+                      estimatedCargoValue: (Number(newQty) || 5000) * 50,
                       safeTemperatureMax: 10,
+
                       spoilageTimeMinutes: 1440,
                       status: "in_transit",
                       origin: { name: newOrigin || user?.city || (user?.coords ? "GPS Location" : "Nashik"), location: user?.coords || { lat: 19.99, lng: 73.78 } },
