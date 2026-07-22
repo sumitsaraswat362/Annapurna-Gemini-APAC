@@ -53,8 +53,8 @@ export const CloudArchitectureSection = () => {
             },
             {
               icon: <Server className="w-8 h-8 text-blue-500" />,
-              title: "Cloud Run & Leaflet",
-              desc: "Massively scalable containerized architecture serving real-time geospatial intelligence and live map tracking without breaking a sweat."
+              title: "Cloud Run & Firestore",
+              desc: "Massively scalable containerized architecture serving real-time geospatial intelligence and sub-second cross-device state synchronization."
             }
           ].map((feature, i) => (
             <motion.div

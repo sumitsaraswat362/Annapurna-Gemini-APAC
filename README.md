@@ -19,12 +19,11 @@
     <a href="#the-architecture-vercel--google-cloud">Tech Stack</a>
   </p>
 
-  <p>
     <img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Google Cloud" />
     <img src="https://img.shields.io/badge/Vertex_AI-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Vertex AI" />
     <img src="https://img.shields.io/badge/BigQuery-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="BigQuery" />
-    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-    <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
+    <img src="https://img.shields.io/badge/Cloud_Run-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white" alt="Cloud Run" />
+    <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
   </p>
 </div>
 
@@ -66,10 +65,13 @@ Utilizes BigQuery ML's `ARIMA_PLUS` forecasting model on telemetry data to predi
 ### 6. Google Cloud Translation API (Vernacular Localization) ✅
 Supports a multi-lingual workforce by translating agent logs and alerts into Hindi, Marathi, Tamil, and Telugu using the real `@google-cloud/translate` v2 API.
 
-### 7. Supabase PostgreSQL (Relational Database & State) ✅
-Provides a robust PostgreSQL backend handling secure user authentication, complex cargo tracking states, and persistent marketplace transactions.
+### 7. Google Cloud Run (Containerized Deployment) ✅
+Massively scalable, production-grade containerized architecture serving real-time geospatial intelligence without breaking a sweat.
 
-### 8. Nodemailer + Gmail SMTP (Automated Alerts) ✅
+### 8. Google Cloud Firestore (Real-Time DB & State Sync) ✅
+Provides robust, sub-second real-time state synchronization between the Fleet dashboard and Wholesaler marketplace via WebSockets.
+
+### 9. Nodemailer + Gmail SMTP (Automated Alerts) ✅
 Dispatches automated email alerts to fleet managers and wholesalers via Gmail SMTP whenever emergency reroutes or sales are triggered.
 
 ---
@@ -78,10 +80,8 @@ Dispatches automated email alerts to fleet managers and wholesalers via Gmail SM
 
 We maintain full transparency regarding upcoming platform enhancements:
 
-- **Google Cloud Firestore**: State management currently handled by Supabase; Firestore planned for real-time sync
 - **Document AI**: Currently using Gemini Vision for OCR; dedicated Document AI processor planned
 - **Dialogflow CX**: Voice interface uses browser SpeechRecognition + Gemini NLU; Dialogflow CX planned for production
-- **Cloud Run**: Currently deployed on Vercel; Cloud Run migration planned for GCP-native deployment
 
 ---
 
@@ -97,22 +97,20 @@ Annapurna implements enterprise-grade safety and security mechanisms to prevent 
 
 ---
 
-## ⚙️ The Architecture (Vercel + Google Cloud)
+## ⚙️ The Architecture (Google Cloud Native)
 
-Annapurna runs on a modern serverless edge architecture via **Vercel**, leveraging the full breadth of the **Google Cloud ecosystem** for extreme reliability and AI intelligence.
+Annapurna runs on a modern serverless architecture via **Google Cloud Run**, leveraging the full breadth of the **Google Cloud ecosystem** for extreme reliability and AI intelligence.
 
 ```mermaid
 graph TD
-    A[IoT Edge / User Input] -->|Telemetry & Requests| B(Vercel Edge API)
-    B --> C{Supabase PostgreSQL}
-    B --> D{Firestore Real-time DB}
-    D --> E[Multi-Agent Orchestrator]
+    A[IoT Edge / User Input] -->|Telemetry & Requests| B(Cloud Run API)
+    B --> C{Firestore Real-time DB}
+    C --> E[Multi-Agent Orchestrator]
     E -->|Function Calling / JSON| F(Vertex AI / Gemini 2.5 Flash)
     F --> G[Gmail SMTP Alerts]
     F --> H[Wholesaler Marketplace]
     I[(BigQuery Telemetry)] -->|Conversational SQL / ARIMA| J[Analytics Dashboard]
     K[Cargo Images & Invoices] --> L(Gemini Vision & Document AI)
-    L --> C
 ```
 
 <div align="center">
