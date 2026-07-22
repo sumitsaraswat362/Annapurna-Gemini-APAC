@@ -3,7 +3,7 @@
 Copy and paste this directly into your `[IDEATHON] Track 1 Submission Template` slides! Since this hackathon is sponsored by **Redrob**, we have strategically framed Annapurna as a new B2B extension of the Redrob AI ecosystem.
 
 ### Important Links to Include in your Submission:
-*   **Live Prototype:** https://annapurna-gemini-apac.vercel.app/
+*   **Live Prototype:** https://annapurna-web-887568501843.us-central1.run.app
 *   **GitHub Repo:** https://github.com/sumitsaraswat362/Annapurna-Gemini-APAC
 *   **Demo Video:** *(Paste your public YouTube link here!)*
 ---
