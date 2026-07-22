@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { fetchArimaForecast } from "./actions";
 import { ForecastDataPoint } from "../../lib/bigquery-client";
-import { Send, Bot, Database, BarChart3, AlertTriangle, Truck, Leaf, IndianRupee, CloudOff, Activity, Scale, Gavel } from "lucide-react";
+import { Send, Bot, Database, BarChart3, AlertTriangle, Truck, Leaf, IndianRupee, CloudOff, Activity, Scale, Gavel, Mic, MicOff, Download } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
 import ReactMarkdown from 'react-markdown';
@@ -42,6 +42,59 @@ export default function AnalyticsDashboard() {
   const [legalQuery, setLegalQuery] = useState("");
   const [legalReport, setLegalReport] = useState<{ query: string; report: string; context: string } | null>(null);
   const [isLegalLoading, setIsLegalLoading] = useState(false);
+
+  // Voice State
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      setSpeechSupported(false);
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) return;
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setQuery(transcript);
+        submitQuery(transcript);
+      };
+      recognition.onerror = (event: any) => {
+        console.error("Speech error", event);
+        setIsListening(false);
+      };
+      recognition.onend = () => setIsListening(false);
+      recognition.start();
+    } catch (e) {
+      console.error(e);
+      setSpeechSupported(false);
+    }
+  };
+
+  const downloadPDF = async () => {
+    if (!legalReport) return;
+    const element = document.getElementById('legal-report-content');
+    if (element) {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       10,
+        filename:     `FSSAI_Compliance_Report.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+  };
 
   const submitQuery = async (q: string) => {
     if (!q.trim()) return;
@@ -235,21 +288,37 @@ export default function AnalyticsDashboard() {
                 </div>
 
                 <div className="p-4 bg-[var(--bg-primary)]/40 border-t border-[var(--separator)] backdrop-blur-md">
-                  <form onSubmit={handleAnalyticsSubmit} className="relative">
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Ask BigQuery..."
-                      className="w-full bg-white/5 border border-[var(--separator)] rounded-xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-[var(--text-tertiary)]"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isLoading || !query.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-700 disabled:text-[var(--text-tertiary)] text-[var(--text-primary)] rounded-lg transition-colors"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                  <form onSubmit={handleAnalyticsSubmit} className="relative flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Ask BigQuery (e.g. Show me all seafood shipments)"
+                        className="w-full bg-white/5 border border-[var(--separator)] rounded-2xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-[var(--text-tertiary)] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] backdrop-blur-xl"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isLoading || !query.trim()}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-800 disabled:text-[var(--text-tertiary)] text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {speechSupported && (
+                      <button
+                        type="button"
+                        onClick={toggleListening}
+                        className={`p-3 rounded-2xl flex-shrink-0 transition-all shadow-lg backdrop-blur-xl border ${
+                          isListening 
+                            ? 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse shadow-red-500/20' 
+                            : 'bg-white/5 hover:bg-white/10 border-[var(--separator)] text-[var(--text-secondary)] hover:text-white'
+                        }`}
+                        title="Voice Query"
+                      >
+                        {isListening ? <Mic className="w-5 h-5 animate-pulse" /> : <MicOff className="w-5 h-5" />}
+                      </button>
+                    )}
                   </form>
                 </div>
               </div>
@@ -507,12 +576,24 @@ export default function AnalyticsDashboard() {
                     </div>
                   </div>
 
-                  <div className="bg-[var(--fill-secondary)]/70 border border-[var(--separator)] rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl">
-                    <h3 className="text-lg font-medium flex items-center gap-2 mb-4 text-[var(--text-primary)]">
-                      <Scale className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                      Legal Liability Report (Generative AI)
-                    </h3>
-                    <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed">
+                  <div className="bg-[var(--fill-secondary)]/70 border border-[var(--separator)] rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] backdrop-blur-xl relative group">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-medium flex items-center gap-2 text-[var(--text-primary)]">
+                        <Scale className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        Legal Liability Report (Generative AI)
+                      </h3>
+                      <button 
+                        onClick={downloadPDF}
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-white/5 hover:bg-white/10 border border-[var(--separator)] rounded-lg text-emerald-400 transition-all shadow-sm backdrop-blur-md hover:shadow-emerald-500/20"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Export PDF
+                      </button>
+                    </div>
+                    <div id="legal-report-content" className="prose dark:prose-invert max-w-none text-sm leading-relaxed p-4 bg-white/5 rounded-xl border border-white/5">
+                      <div className="mb-4 text-center border-b border-white/10 pb-4 hidden print:block">
+                        <h1 className="text-2xl font-bold">Annapurna Legal Compliance Report</h1>
+                        <p className="text-sm opacity-60">Grounded in FSSAI Food Safety Regulations</p>
+                      </div>
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{legalReport.report}</ReactMarkdown>
                     </div>
                   </div>
