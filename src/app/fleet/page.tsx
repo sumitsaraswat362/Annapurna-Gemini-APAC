@@ -60,6 +60,18 @@ export default function FleetApp() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // WhatsApp Mock State
+  const [whatsappMock, setWhatsappMock] = useState<{message: string; visible: boolean} | null>(null);
+
+  useEffect(() => {
+    const handleAlert = (e: any) => {
+      setWhatsappMock({ message: e.detail.message, visible: true });
+      setTimeout(() => setWhatsappMock(prev => prev ? {...prev, visible: false} : null), 8000);
+    };
+    window.addEventListener('whatsapp-alert', handleAlert);
+    return () => window.removeEventListener('whatsapp-alert', handleAlert);
+  }, []);
+
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
@@ -774,18 +786,6 @@ function FleetTrackingView() {
   const [activeMapBid, setActiveMapBid] = useState<Bid | null>(null);
   const [driverLocation, setDriverLocation] = useState<string | null>(null);
   const [locationStatus, setLocationStatus] = useState<string>("");
-
-  // WhatsApp Mock State
-  const [whatsappMock, setWhatsappMock] = useState<{message: string; visible: boolean} | null>(null);
-
-  useEffect(() => {
-    const handleAlert = (e: any) => {
-      setWhatsappMock({ message: e.detail.message, visible: true });
-      setTimeout(() => setWhatsappMock(prev => prev ? {...prev, visible: false} : null), 8000);
-    };
-    window.addEventListener('whatsapp-alert', handleAlert);
-    return () => window.removeEventListener('whatsapp-alert', handleAlert);
-  }, []);
 
   // Add Cargo Form States
   const [newPlate, setNewPlate] = useState("MH-04-XX-9999");
