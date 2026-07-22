@@ -354,13 +354,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Persist to localStorage
+  // Persist to localStorage (client-only, guarded for SSR)
   React.useEffect(() => {
-    if (state.cargos.length > 0 || state.bids.length > 0) {
-      const s = JSON.stringify(state);
-      if (localStorage.getItem("annapurna_state") !== s) {
-        localStorage.setItem("annapurna_state", s);
+    try {
+      if (typeof window !== "undefined" && (state.cargos.length > 0 || state.bids.length > 0)) {
+        const s = JSON.stringify(state);
+        if (localStorage.getItem("annapurna_state") !== s) {
+          localStorage.setItem("annapurna_state", s);
+        }
       }
+    } catch (e) {
+      // localStorage may be unavailable in some environments
     }
   }, [state]);
 
