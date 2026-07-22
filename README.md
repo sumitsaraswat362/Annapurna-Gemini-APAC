@@ -69,7 +69,7 @@ Supports a multi-lingual workforce by translating agent logs and alerts into Hin
 Massively scalable, production-grade containerized architecture serving real-time geospatial intelligence without breaking a sweat.
 
 ### 8. Google Cloud Firestore (Real-Time DB & State Sync) ✅
-Provides robust, sub-second real-time state synchronization between the Fleet dashboard and Wholesaler marketplace via WebSockets.
+Provides robust, sub-second real-time state synchronization between the Fleet dashboard and Wholesaler marketplace via gRPC streaming.
 
 ### 9. Nodemailer + Gmail SMTP (Automated Alerts) ✅
 Dispatches automated email alerts to fleet managers and wholesalers via Gmail SMTP whenever emergency reroutes or sales are triggered.
