@@ -61,8 +61,9 @@ By combining real-time IoT telemetry with a **Gemini 2.5 Flash-powered Multi-Age
 2. 🔀 **Reroutes** — Calculates optimal emergency reroutes to the nearest cold storage or wholesale market
 3. 📢 **Broadcasts** — Opens an emergency marketplace, alerting nearby wholesalers of discounted distress cargo
 4. 💰 **Negotiates** — AI agents autonomously negotiate fair pricing between fleet operators and buyers
-5. ⚖️ **Validates** — RAG-powered legal compliance engine checks FSSAI regulations in real-time
+5. ⚖️ **Validates** — AI Legal Assistant, grounded in FSSAI regulations, checks compliance in real-time
 6. 📧 **Notifies** — Dispatches multilingual alerts via email to all stakeholders
+7. 🌍 **Recovers** — Live ESG tracking of total food saved, economic value recovered, and CO2 prevented
 
 **Zero human intervention required. Fully autonomous. End-to-end.**
 
@@ -74,23 +75,19 @@ Annapurna is built **100% on Google Cloud**. Every major feature leverages a rea
 
 | # | Google Cloud Service | What It Does in Annapurna | Status |
 |---|---|---|---|
-| 1 | **Vertex AI / Gemini 2.5 Flash** | Primary decision engine. Makes autonomous `continue`, `reroute`, or `emergency_sell` decisions using structured JSON outputs (`responseMimeType: 'application/json'`) based on live cargo telemetry. | ✅ Live |
-| 2 | **Gemini Function Calling** | Multi-agent orchestrator. Gemini executes declared tool definitions like `reroute_truck()`, `alert_wholesaler()`, `scan_cargo()` to trigger real platform actions autonomously. | ✅ Live |
-| 3 | **Gemini Vision (Multi-Modal AI)** | Automated cargo quality inspection. Drivers upload cargo photos; Gemini Vision analyzes spoilage percentage, rot, mold, and generates quality grades — all via real API calls. | ✅ Live |
-| 4 | **Google BigQuery** | Conversational analytics over the live `annapurna_telemetry` dataset. Fleet managers ask plain English questions; Gemini generates SQL and executes it directly against BigQuery tables. | ✅ Live |
-| 5 | **BigQuery ML (ARIMA+)** | Predictive forecasting using `ARIMA_PLUS` models on telemetry data. Predicts temperature trends and equipment failures **14 days in advance**, before they happen. | ✅ Live |
+| 1 | **Vertex AI & Gemini** | The core intelligence engine (Gemini 2.5 Flash & Vision). Powers the DecisionAgent, multi-modal quality inspection, and the FSSAI Legal Assistant. Features Google's **Agent Development Kit (ADK)** for autonomous orchestration. | ✅ Live |
+| 2 | **Google BigQuery** | Conversational analytics over the live `annapurna_telemetry` dataset. Fleet managers ask plain English questions; Gemini generates SQL and executes it directly against BigQuery tables. | ✅ Live |
+| 3 | **BigQuery ML (ARIMA+)** | Predictive forecasting using `ARIMA_PLUS` models on telemetry data. Predicts temperature trends and equipment failures **14 days in advance**, before they happen. | ✅ Live |
+| 4 | **Google Cloud Firestore** | Real-time state synchronization between Fleet and Wholesaler dashboards via gRPC streaming (`onSnapshot` listeners). All writes are server-mediated through the Admin SDK — zero client-side write access. | ✅ Live |
+| 5 | **Google Cloud Run** | Production-grade containerized deployment. Multi-stage Docker build with Next.js standalone output, CI/CD via `cloudbuild.yaml`, serving real-time geospatial intelligence at scale. | ✅ Live |
 | 6 | **Google Cloud Translation API** | Vernacular localization for a multi-lingual workforce. Translates agent logs and alerts into **Hindi, Marathi, Tamil, and Telugu** using the real `@google-cloud/translate` v2 API. | ✅ Live |
-| 7 | **Google Cloud Run** | Production-grade containerized deployment. Multi-stage Docker build with Next.js standalone output, CI/CD via `cloudbuild.yaml`, serving real-time geospatial intelligence at scale. | ✅ Live |
-| 8 | **Google Cloud Firestore** | Real-time state synchronization between Fleet and Wholesaler dashboards via gRPC streaming (`onSnapshot` listeners). All writes are server-mediated through the Admin SDK — zero client-side write access. | ✅ Live |
-| 9 | **Gemini + RAG (Legal Compliance)** | AI-powered legal compliance engine. Retrieves FSSAI food safety regulations and generates definitive liability reports with cited legal references using Retrieval-Augmented Generation. | ✅ Live |
-| 10 | **Gmail SMTP (Nodemailer)** | Dispatches automated email alerts to fleet managers and wholesalers via Gmail SMTP whenever emergency reroutes or cargo sales are triggered by the AI. | ✅ Live |
 
 ---
 
 ## 🚀 Key Platform Features
 
 ### 🧠 Autonomous Nerve Center
-Watch AI agents communicate in real-time. **MonitorAgent**, **DecisionAgent**, and **NotificationAgent** orchestrate your entire supply chain without human intervention. See every decision, every function call, every autonomous action as it happens.
+Watch AI agents communicate in real-time. **MonitorAgent**, **DecisionAgent**, and **NotificationAgent** orchestrate your entire supply chain without human intervention, powered by Google's **Agent Development Kit (ADK)**. See every decision and autonomous action as it happens.
 
 ### 📊 Fleet Dashboard & Live Map
 Monitor thousands of vehicles with pinpoint GPS accuracy on interactive Leaflet maps. Real-time telemetry streaming shows temperature, humidity, ethylene levels, and ETA for every truck in your fleet.
@@ -110,8 +107,8 @@ BigQuery ML's ARIMA+ forecasting model predicts spoilage risk windows 14 days in
 ### 📸 Vision AI Quality Control
 Multi-modal cargo inspection at delivery checkpoints. Drivers upload photos; Gemini Vision scans and grades the shipment quality, detecting spoilage, rot, or contamination automatically.
 
-### ⚖️ Legal RAG Assistant
-AI-powered legal compliance powered by Retrieval-Augmented Generation. Retrieves relevant FSSAI regulations and generates comprehensive liability analysis reports with proper legal citations.
+### ⚖️ AI Legal Assistant
+AI-powered legal compliance. Grounded directly in relevant FSSAI food safety regulations, it generates comprehensive liability analysis reports to assist with dispute resolution.
 
 ### 🗣️ Voice Interface
 Hands-free fleet management using browser-native speech recognition + Gemini NLU. Fleet managers can issue voice commands while on the move.
@@ -135,7 +132,7 @@ graph TD
     C -->|gRPC Streaming| D[📱 Fleet Dashboard]
     C -->|gRPC Streaming| E[🏪 Wholesaler Marketplace]
     B --> F{🧠 Vertex AI / Gemini 2.5 Flash}
-    F -->|Function Calling| G[🔀 Autonomous Rerouting]
+    F -->|Agent Development Kit| G[🔀 Autonomous Rerouting]
     F -->|Structured JSON| H[📊 AI Decision Engine]
     F -->|Multi-Modal| I[📸 Vision Quality Control]
     B --> J[(📈 BigQuery — Telemetry Analytics)]
@@ -143,7 +140,7 @@ graph TD
     J -->|Conversational SQL| L[💬 Natural Language Analytics]
     B --> M[📧 Gmail SMTP Alerts]
     B --> N[🌍 Cloud Translation API]
-    F -->|RAG Pipeline| O[⚖️ Legal Compliance Engine]
+    F -->|Grounded AI| O[⚖️ Legal Compliance Engine]
 ```
 
 ### Tech Stack at a Glance
@@ -151,7 +148,7 @@ graph TD
 | Layer | Technology |
 |---|---|
 | **Frontend** | Next.js 16, React 19, Tailwind CSS 4, Framer Motion, Recharts, Leaflet Maps |
-| **AI Engine** | Vertex AI, Gemini 2.5 Flash, Gemini Vision, Function Calling, RAG |
+| **AI Engine** | Vertex AI, Gemini 2.5 Flash, Gemini Vision, Agent Development Kit (ADK) |
 | **Database** | Google Cloud Firestore (real-time gRPC streaming) |
 | **Analytics** | Google BigQuery, BigQuery ML (ARIMA+ forecasting) |
 | **Deployment** | Google Cloud Run (containerized Docker), Cloud Build CI/CD |
