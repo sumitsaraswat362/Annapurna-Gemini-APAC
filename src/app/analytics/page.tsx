@@ -85,7 +85,7 @@ export default function AnalyticsDashboard() {
     const element = document.getElementById('legal-report-content');
     if (element) {
       const html2pdf = (await import('html2pdf.js')).default;
-      const opt = {
+      const opt: any = {
         margin:       10,
         filename:     `FSSAI_Compliance_Report.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },

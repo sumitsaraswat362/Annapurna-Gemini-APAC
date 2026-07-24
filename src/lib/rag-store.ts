@@ -13,7 +13,7 @@ const embedAi = new Proxy({} as GoogleGenAI, {
           project: PROJECT_ID,
           location: 'us-central1'
         }
-      });
+      } as any);
     }
     return (_embedAiInstance as any)[prop];
   }

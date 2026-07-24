@@ -11,7 +11,9 @@ export const ai = new Proxy({} as GoogleGenAI, {
       if (process.env.GEMINI_API_KEY) {
         _aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       } else {
-        _aiInstance = new GoogleGenAI({ vertexai: { project, location } });
+        _aiInstance = new GoogleGenAI({
+          vertexai: { project, location }
+        } as any);
       }
     }
     return (_aiInstance as any)[prop];

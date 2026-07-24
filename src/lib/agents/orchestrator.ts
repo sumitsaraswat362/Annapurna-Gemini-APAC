@@ -104,13 +104,14 @@ export async function runAutonomousCycle() {
     });
 
     for await (const event of stream) {
-      if (event.toolCalls) {
-        for (const call of event.toolCalls) {
+      const ev = event as any;
+      if (ev.toolCalls) {
+        for (const call of ev.toolCalls) {
           toolExecutions.push({ name: call.name, args: call.args });
         }
       }
-      if (event.content?.parts?.[0]?.text && event.author === 'fleet_decision_agent') {
-        console.log(`[ADK Agent Output] ${event.content.parts[0].text}`);
+      if (ev.content?.parts?.[0]?.text && ev.author === 'fleet_decision_agent') {
+        console.log(`[ADK Agent Output] ${ev.content.parts[0].text}`);
       }
     }
   }

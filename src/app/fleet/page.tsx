@@ -764,7 +764,7 @@ function FleetTrackingView() {
           type: "ADD_NOTIFICATION",
           notification: {
             id: `bq-err-${Date.now()}`,
-            type: "alert",
+            type: "system",
             title: "BigQuery Sync Failed",
             message: "Failed to stream to BigQuery",
             timestamp: Date.now(),
@@ -935,7 +935,7 @@ function FleetTrackingView() {
     const failedTelemetry = {
       temperature: selectedCargo.safeTemperatureMax + 5,
       humidity: 95,
-      ethyleneLevel: "high",
+      ethyleneLevel: "high" as any,
       timestamp: Date.now()
     };
     
