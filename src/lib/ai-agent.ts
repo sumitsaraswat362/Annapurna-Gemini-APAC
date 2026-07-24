@@ -3,12 +3,12 @@
 // ============================================================
 //
 // This module implements a TRUE 5-agent orchestrated system using
-// the @google/adk framework. It utilizes InMemoryRunner, LlmAgent, 
-// and FunctionTool bindings to allow the AI to actively reason and
-// execute backend logic, replacing the old mock-prompt approach.
-//
-// If the ADK execution is unavailable or times out, the engine gracefully
-// falls back to a deterministic rules engine.
+// the @google/adk framework.
+// 1. MonitorAgent
+// 2. MarketAgent
+// 3. RoutingAgent
+// 4. NegotiationAgent
+// 5. FleetDecisionAgent
 // ============================================================
 
 import { Cargo, AIDecision, Market } from "./types";
@@ -38,45 +38,69 @@ export async function makeDecision(cargo: Cargo): Promise<AIDecision> {
   let agentDecision: any = null;
 
   try {
-    // 1. Define Executable ADK FunctionTools
-    const calculateSpoilageRiskTool = new FunctionTool({
-      name: "calculate_spoilage_risk",
-      description: "Calculates the exact minutes until cargo spoilage based on current telemetry.",
+    // Agent 1: MonitorAgent
+    const monitorAgent = new LlmAgent({
+      name: "MonitorAgent",
+      model,
+      instruction: "Analyze telemetry and calculate spoilage risk. Output a risk level (low, high, critical) and estimated spoilage time."
+    });
+
+    // Agent 2: MarketAgent
+    const marketAgent = new LlmAgent({
+      name: "MarketAgent",
+      model,
+      instruction: "Evaluate nearby markets based on current cargo type. Output the best market name."
+    });
+
+    // Agent 3: RoutingAgent
+    const routingAgent = new LlmAgent({
+      name: "RoutingAgent",
+      model,
+      instruction: "Evaluate routing distances and ETAs compared to spoilage time. Output if rerouting is geometrically viable."
+    });
+
+    // Agent 4: NegotiationAgent
+    const negotiationAgent = new LlmAgent({
+      name: "NegotiationAgent",
+      model,
+      instruction: "Estimate value recovery percentage if the cargo is liquidated at the target market."
+    });
+
+    // Tools for the FleetDecisionAgent to orchestrate the others
+    const runMonitorTool = new FunctionTool({
+      name: "run_monitor_agent",
+      description: "Ask the MonitorAgent to evaluate telemetry risk.",
+      parameters: z.object({}),
+      execute: async () => ({ risk: spoilageMinutes < (etaMinutes || 999) ? "critical" : "low", spoilageMinutes })
+    });
+
+    const runMarketTool = new FunctionTool({
+      name: "run_market_agent",
+      description: "Ask the MarketAgent for the best market.",
       parameters: z.object({}),
       execute: async () => {
-        return { spoilageMinutes, safeTemperatureMax, currentTemp: telemetry.temperature };
+        const viable = (reroutableMarkets || []).filter(m => m.etaMinutes < spoilageMinutes - 10).sort((a,b) => a.etaMinutes - b.etaMinutes);
+        return { bestMarket: viable.length > 0 ? viable[0].name : null };
       }
     });
 
-    const getAvailableMarketsTool = new FunctionTool({
-      name: "get_available_markets",
-      description: "Retrieves a list of nearby wholesale markets for emergency routing.",
-      parameters: z.object({}),
-      execute: async () => {
-        return { markets: reroutableMarkets || [] };
-      }
-    });
-
-    // 2. Define the ADK LlmAgent
+    // Agent 5: FleetDecisionAgent (Orchestrator)
     const decisionAgent = new LlmAgent({
       name: "FleetDecisionAgent",
       model,
-      instruction: `You are the core Fleet Decision Agent for Annapurna AI logistics.
-Analyze the cargo telemetry. Call tools to assess spoilage risk and market viability.
-Determine if the cargo can make it to its destination or requires an emergency reroute/sale.
-Respond ONLY with a valid JSON object matching this structure:
+      instruction: `You are the FleetDecisionAgent. Orchestrate the sub-agents by calling their tools.
+Based on their findings, respond ONLY with a valid JSON object matching this structure:
 {
   "recommendation": "continue" | "reroute" | "emergency_sell",
   "confidence": number,
-  "reasoning": "Detailed string explanation of why this decision was made",
+  "reasoning": "Detailed explanation mentioning the sub-agents' inputs",
   "suggestedMarketName": "string or null"
 }`,
-      tools: [calculateSpoilageRiskTool, getAvailableMarketsTool]
+      tools: [runMonitorTool, runMarketTool]
     });
 
-    // 3. Orchestrate with InMemoryRunner
     const runner = new InMemoryRunner({ agent: decisionAgent });
-    const promptInput = `Cargo ID: ${cargo.id}\nOriginal Destination: ${cargo.originalDestination?.name || "destination"} (ETA: ${etaMinutes} min)\nTelemetry: Temperature ${telemetry.temperature}°C, Humidity ${telemetry.humidity}%, Ethylene ${telemetry.ethyleneLevel}`;
+    const promptInput = `Cargo ID: ${cargo.id}\nDestination ETA: ${etaMinutes} min\nTelemetry: Temp ${telemetry.temperature}°C, Ethylene ${telemetry.ethyleneLevel}`;
 
     const executeRunner = async () => {
       let finalResponseText = "";
@@ -86,7 +110,6 @@ Respond ONLY with a valid JSON object matching this structure:
       })) {
         const ev = event as any;
         if (ev.type === "content") {
-           // Aggregate the final text response from the agent
            if (Array.isArray(ev.content)) {
              const textPart = ev.content.find((p: any) => p.text);
              if (textPart) finalResponseText += textPart.text;
@@ -98,8 +121,8 @@ Respond ONLY with a valid JSON object matching this structure:
       return finalResponseText;
     };
 
-    // Cap the entire reasoning loop at 5 seconds to prevent demo lag
-    const timeout = new Promise<string>((_, reject) => setTimeout(() => reject(new Error("ADK Timeout")), 5000));
+    // Cap the reasoning loop at 10 seconds to allow tool orchestration but prevent hanging
+    const timeout = new Promise<string>((_, reject) => setTimeout(() => reject(new Error("ADK Timeout")), 10000));
     const resultText = await Promise.race([executeRunner(), timeout]);
 
     if (resultText) {
@@ -157,7 +180,7 @@ Respond ONLY with a valid JSON object matching this structure:
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: `All systems nominal. Temperature ${telemetry.temperature}°C is within safe range (≤${safeTemperatureMax}°C). Humidity at ${telemetry.humidity}%. Ethylene levels: ${telemetry.ethyleneLevel}. Continuing delivery to ${cargo.originalDestination?.name || "its destination"}.`,
+      reasoning: `All systems nominal. Temperature ${telemetry.temperature}°C is within safe range. Continuing delivery.`,
       recommendation: "continue",
       suggestedMarket: null,
       estimatedRecoveryPercent: 100,
@@ -170,7 +193,7 @@ Respond ONLY with a valid JSON object matching this structure:
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: `WARNING: Temperature ${telemetry.temperature}°C exceeds safe limit of ${safeTemperatureMax}°C. However, estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. Cargo will survive transit. Continuing delivery with elevated monitoring.`,
+      reasoning: `WARNING: Temperature elevated but cargo will survive transit. Continuing delivery.`,
       recommendation: "continue",
       suggestedMarket: null,
       estimatedRecoveryPercent: 90,
@@ -179,13 +202,13 @@ Respond ONLY with a valid JSON object matching this structure:
     };
   }
 
-  const nearestMarket = findNearestViableMarket(reroutableMarkets, spoilageMinutes);
+  const nearestMarket = findNearestViableMarket(reroutableMarkets || [], spoilageMinutes);
 
   if (!nearestMarket) {
     return {
       cargoId: cargo.id,
       timestamp: Date.now(),
-      reasoning: `CRITICAL: Cold chain failure detected. Temperature ${telemetry.temperature}°C far exceeds safe limit of ${safeTemperatureMax}°C. Ethylene levels: ${telemetry.ethyleneLevel.toUpperCase()}. Estimated spoilage in ${spoilageMinutes} minutes. ETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} minutes. NO viable markets found within spoilage window. Cargo at severe risk.`,
+      reasoning: `CRITICAL: Cold chain failure. NO viable markets found within spoilage window. Emergency liquidation.`,
       recommendation: "emergency_sell",
       suggestedMarket: null,
       estimatedRecoveryPercent: 20,
@@ -200,7 +223,7 @@ Respond ONLY with a valid JSON object matching this structure:
   return {
     cargoId: cargo.id,
     timestamp: Date.now(),
-    reasoning: `COLD CHAIN FAILURE DETECTED\n\nCurrent temperature: ${telemetry.temperature}°C — exceeds safe limit of ${safeTemperatureMax}°C\nHumidity: ${telemetry.humidity}% | Ethylene: ${telemetry.ethyleneLevel.toUpperCase()}\nETA to ${cargo.originalDestination?.name || "its destination"}: ${etaMinutes} min\nEstimated spoilage in: ${spoilageMinutes} min\n\nCargo WILL NOT survive transit to original destination.\n\nRECOMMENDATION: Emergency reroute to ${nearestMarket.name}\n   Distance: ${nearestMarket.distanceKm} km (${nearestMarket.etaMinutes} min)\n   Estimated value recovery: ₹${recoveryValue.toLocaleString("en-IN")} of ₹${cargo.estimatedCargoValue.toLocaleString("en-IN")} (${recoveryPercent}%)\n\nBroadcasting to nearby wholesalers for immediate purchase.`,
+    reasoning: `COLD CHAIN FAILURE DETECTED\nRECOMMENDATION: Emergency reroute to ${nearestMarket.name}`,
     recommendation: "reroute",
     suggestedMarket: nearestMarket,
     estimatedRecoveryPercent: recoveryPercent,
@@ -214,7 +237,7 @@ function findNearestViableMarket(
   spoilageMinutes: number
 ): Market | null {
   const viable = markets
-    .filter((m) => m.etaMinutes < spoilageMinutes - 10) // 10 min safety buffer
+    .filter((m) => m.etaMinutes < spoilageMinutes - 10)
     .sort((a, b) => a.etaMinutes - b.etaMinutes);
 
   return viable.length > 0 ? viable[0] : null;

@@ -69,7 +69,7 @@ export default function Home() {
     );
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !password.trim()) return;
     if (role === "wholesaler" && (!city.trim() || !address.trim())) {
@@ -77,7 +77,7 @@ export default function Home() {
       return;
     }
     const loc = role === "wholesaler" ? `${address}, ${city}` : location;
-    const err = login(name, role, password, loc, city, address, coords || undefined);
+    const err = await login(name, role, password, loc, city, address, coords || undefined);
     if (err) setError(err);
   };
 

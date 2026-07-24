@@ -1,5 +1,6 @@
 import { Firestore } from "@google-cloud/firestore";
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 // Use the service account credentials already configured in .env.local
 const firestore = new Firestore({
@@ -72,6 +73,18 @@ export async function POST(req: Request) {
           status: isPartial ? cargoData?.status : "rerouting",
           quantityKg: newQuantity,
         }, { merge: true });
+
+        // Mint a Carbon Token (1 token = ~1kg of methane prevented equivalent, simplified to 45 per cargo for demo)
+        const timestamp = Date.now();
+        const hashStr = `${cargoId}-${bidId}-${timestamp}-ANNAPURNA`;
+        const hash = crypto.createHash("sha256").update(hashStr).digest("hex");
+        
+        batch.set(firestore.collection("carbon_tokens").doc(hash), {
+          cargoId,
+          amount: 45, // Standardized 45 GCC per saved cargo
+          timestamp,
+          issuedBy: "Annapurna Global Network",
+        });
 
         await batch.commit();
       }

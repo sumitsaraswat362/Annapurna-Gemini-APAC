@@ -17,8 +17,8 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: (name: string, role: UserRole, password?: string, location?: string, city?: string, address?: string, coords?: { lat: number; lng: number }) => string | null;
-  logout: () => void;
+  login: (name: string, role: UserRole, password?: string, location?: string, city?: string, address?: string, coords?: { lat: number; lng: number }) => Promise<string | null>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -29,57 +29,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
-    const storedUser = localStorage.getItem("annapurna_active_user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Fetch the current user session from the server (cookie-based)
+    fetch("/api/auth/me")
+      .then(res => res.json())
+      .then(data => {
+        if (data.user) {
+          setUser(data.user);
+        }
+        setMounted(true);
+      })
+      .catch(() => {
+        setMounted(true);
+      });
   }, []);
 
-  const login = (name: string, role: UserRole, password?: string, location?: string, city?: string, address?: string, coords?: { lat: number; lng: number }) => {
-    // Basic persistent user registry in localStorage
-    const savedProfilesRaw = localStorage.getItem("annapurna_profiles");
-    const profiles: AuthUser[] = savedProfilesRaw ? JSON.parse(savedProfilesRaw) : [];
-    
-    const existingUser = profiles.find(p => p.name === name && p.role === role);
-
-    let finalUser: AuthUser;
-
-    if (existingUser) {
-      if (existingUser.password !== password) {
-        return "Incorrect password for this user.";
-      }
-      // Update location info on every login if provided
-      if (location) existingUser.location = location;
-      if (city) existingUser.city = city;
-      if (address) existingUser.address = address;
-      if (coords) existingUser.coords = coords;
+  const login = async (name: string, role: UserRole, password?: string, location?: string, city?: string, address?: string, coords?: { lat: number; lng: number }) => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, role, password, location, city, address, coords })
+      });
       
-      finalUser = existingUser;
-      // Save the updated profiles to localStorage
-      localStorage.setItem("annapurna_profiles", JSON.stringify(profiles));
-    } else {
-      // Register new user
-      finalUser = { name, role, password, location, city, address, coords };
-      profiles.push(finalUser);
-      localStorage.setItem("annapurna_profiles", JSON.stringify(profiles));
+      const data = await res.json();
+      
+      if (!res.ok) {
+        return data.error || "Login failed";
+      }
+      
+      setUser(data.user);
+      
+      if (role === "director") router.push("/fleet");
+      if (role === "wholesaler") router.push("/wholesaler");
+      
+      return null;
+    } catch (e) {
+      return "Network error during login";
     }
-
-    setUser(finalUser);
-    localStorage.setItem("annapurna_active_user", JSON.stringify(finalUser));
-    
-    if (role === "director") router.push("/fleet");
-    if (role === "wholesaler") router.push("/wholesaler");
-    return null;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
-    localStorage.removeItem("annapurna_active_user");
     router.push("/");
   };
 
-  // Prevent hydration mismatch by returning null until mounted
   if (!mounted) return null;
 
   return (

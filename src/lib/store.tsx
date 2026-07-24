@@ -16,6 +16,7 @@ import {
   Notification,
   CargoStatus,
   Market,
+  CarbonToken,
 } from "./types";
 import { FLEET_CARGOS } from "@/data/mock-data";
 
@@ -41,6 +42,7 @@ function sanitize(obj: any): any {
 export interface AppState {
   cargos: Cargo[];
   bids: Bid[];
+  carbonTokens: CarbonToken[];
   aiDecisions: AIDecision[];
   notifications: Notification[];
   simulationRunning: boolean;
@@ -50,6 +52,7 @@ export interface AppState {
 const initialState: AppState = {
   cargos: [],
   bids: [],
+  carbonTokens: [],
   aiDecisions: [],
   notifications: [],
   simulationRunning: false,
@@ -68,7 +71,10 @@ type Action =
   | { type: "ADD_NOTIFICATION"; notification: Notification }
   | { type: "MARK_NOTIFICATION_READ"; notificationId: string }
   | { type: "START_SIMULATION" }
-  | { type: "ADVANCE_SIMULATION" }
+  | { type: "STOP_SIMULATION" }
+  | { type: "TICK_SIMULATION" }
+  | { type: "SET_CARBON_TOKENS"; tokens: CarbonToken[] }
+  | { type: "ADD_CARBON_TOKEN"; token: CarbonToken }
   | { type: "SET_CARGO_REROUTE"; cargoId: string; market: Market }
   | { type: "BROADCAST_TO_MARKETPLACE"; cargoId: string }
   | { type: "ADD_CARGO"; cargo: Cargo }
@@ -206,8 +212,17 @@ function appReducer(state: AppState, action: Action): AppState {
     case "START_SIMULATION":
       return { ...state, simulationRunning: true, simulationStep: 0 };
 
-    case "ADVANCE_SIMULATION":
+    case "STOP_SIMULATION":
+      return { ...state, simulationRunning: false };
+
+    case "TICK_SIMULATION":
       return { ...state, simulationStep: state.simulationStep + 1 };
+
+    case "SET_CARBON_TOKENS":
+      return { ...state, carbonTokens: action.tokens };
+
+    case "ADD_CARBON_TOKEN":
+      return { ...state, carbonTokens: [action.token, ...state.carbonTokens] };
 
     case "SET_CARGO_REROUTE":
       return {
@@ -351,11 +366,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Firestore bids listener error:", err);
     });
 
+    // Real-time listener for carbon tokens
+    const tokensRef = collection(db, "carbon_tokens");
+    const unsubTokens = onSnapshot(tokensRef, (snapshot) => {
+      const tokens = snapshot.docs.map((d) => ({ ...d.data(), hash: d.id })) as CarbonToken[];
+      dispatch({ type: "SET_CARBON_TOKENS", tokens: tokens.sort((a,b) => b.timestamp - a.timestamp) });
+    }, (err) => {
+      console.error("Firestore tokens listener error:", err);
+    });
+
     // No localStorage fallback — Firestore is the single source of truth for cross-device sync
 
     return () => {
       unsubCargos();
       unsubBids();
+      unsubTokens();
     };
   }, []);
 

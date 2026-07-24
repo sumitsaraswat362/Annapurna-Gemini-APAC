@@ -2,6 +2,15 @@
 // ANNAPURNA — Core Type Definitions
 // ============================================================
 
+export interface CarbonToken {
+  hash: string;
+  cargoId: string;
+  amount: number;
+  timestamp: number;
+  issuedBy: string;
+}
+// ============================================================
+
 export interface GeoPoint {
   lat: number;
   lng: number;

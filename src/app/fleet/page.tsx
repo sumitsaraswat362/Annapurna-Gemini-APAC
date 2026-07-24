@@ -570,6 +570,9 @@ function DashboardView() {
   const emergencyCargos = myCargos.filter((c) => c.status === "emergency").length;
   const reroutedCargos = myCargos.filter((c) => c.status === "rerouting").length;
 
+  const totalCarbonTokens = state.carbonTokens.reduce((acc, token) => acc + token.amount, 0);
+  const latestToken = state.carbonTokens[0];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header>
@@ -619,13 +622,18 @@ function DashboardView() {
         </div>
 
         {/* Feature 7: Carbon Credit Tokenization */}
-        <div className="kpi-card relative overflow-hidden ring-1 ring-[#34C759]/20">
+        <div className="kpi-card relative overflow-hidden ring-1 ring-[#34C759]/20 group">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <svg className="w-16 h-16 text-[#34C759]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" /></svg>
           </div>
-          <p className="kpi-label uppercase tracking-wider">Carbon Credits</p>
-          <p className="kpi-value text-[#34C759]">{reroutedCargos * 45} <span className="text-lg">GCC</span></p>
-          <p className="text-[10px] text-[#34C759] mt-2 font-medium">Methane emissions prevented</p>
+          <p className="kpi-label uppercase tracking-wider">Carbon Ledger</p>
+          <p className="kpi-value text-[#34C759]">{totalCarbonTokens} <span className="text-lg">GCC</span></p>
+          <p className="text-[10px] text-[#34C759] mt-1 font-medium">Methane emissions prevented</p>
+          {latestToken && (
+            <div className="absolute inset-x-0 bottom-0 p-2 bg-[#34C759]/10 border-t border-[#34C759]/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+               <p className="text-[8px] font-mono text-[#34C759]/80 truncate text-center">Latest TX: {latestToken.hash.substring(0, 16)}...</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -923,7 +931,7 @@ function FleetTrackingView() {
         }
       }
 
-      dispatch({ type: "ADVANCE_SIMULATION" });
+      dispatch({ type: "TICK_SIMULATION" });
       step++;
     }, 2000);
   }, [dispatch, emergencyTriggered, state.cargos, selectedCargo?.id]);
