@@ -1,4 +1,19 @@
 <div align="center">
+
+  <!-- 🏆 RECOGNITION BANNER -->
+  <a href="https://cloud.google.com/blog/topics/training-certifications/gen-ai-academy">
+    <img src="https://img.shields.io/badge/🏆_Google_GenAI_APAC_Academy-TOP_75_/_196%2C000%2B_Developers-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white" alt="Google Gen AI Elite Club - Top 75" />
+  </a>
+  <br/>
+  <a href="https://cloud.google.com/blog/topics/training-certifications/gen-ai-academy">
+    <img src="https://img.shields.io/badge/Gen_AI_Elite_Club_Member-Cohort_2_·_APAC_Edition-FF6B00?style=for-the-badge&logo=google&logoColor=white" alt="Gen AI Elite Club" />
+  </a>
+  <br/>
+  <sub><b>Selected: Top 75 out of 196,000+ developers across 12 Asia-Pacific nations</b><br/>(India · Singapore · Japan · China · Malaysia · Indonesia · Australia · South Korea · Thailand · Philippines · Vietnam · New Zealand)</sub>
+
+  <br/>
+  <br/>
+
   <img src="public/images/readme/landing-hero-latest.png" alt="Annapurna — Autonomous Multi-Agent AI for Logistics" width="100%" style="border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.2);">
   
   <br/>
@@ -14,14 +29,14 @@
   
   <p>
     <a href="https://annapurna-887568501843.us-central1.run.app"><img src="https://img.shields.io/badge/Live_App-Cloud_Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white" alt="Live App" /></a>
-    <a href="https://youtu.be/-ZwasZpbZcE"><img src="https://img.shields.io/badge/YouTube-Demo_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo Video" /></a>
+    <a href="https://youtu.be/oO7NOoUSecg?si=46-VzlLp134Hv9jH"><img src="https://img.shields.io/badge/YouTube-Demo_Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo Video" /></a>
     <a href="https://github.com/sumitsaraswat362/Annapurna-Gemini-APAC"><img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub" /></a>
   </p>
 
   <p>
     <a href="https://annapurna-887568501843.us-central1.run.app"><strong>🌐 Live App: https://annapurna-887568501843.us-central1.run.app</strong></a>
     <br/>
-    <a href="https://youtu.be/-ZwasZpbZcE"><strong>📺 Video Demo: https://youtu.be/-ZwasZpbZcE</strong></a>
+    <a href="https://youtu.be/oO7NOoUSecg?si=46-VzlLp134Hv9jH"><strong>📺 Demo Video: https://youtu.be/oO7NOoUSecg</strong></a>
   </p>
 
   <p>
