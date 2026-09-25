@@ -10,6 +10,8 @@
   </a>
   <br/>
   <sub><b>Selected: Top 75 out of 196,000+ developers across 12 Asia-Pacific nations</b><br/>(India · Singapore · Japan · China · Malaysia · Indonesia · Australia · South Korea · Thailand · Philippines · Vietnam · New Zealand)</sub>
+  <br/><br/>
+  <img src="public/images/readme/google_genai_top75.png" alt="Google Gen AI Elite Club Proof" width="80%" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
 
   <br/>
   <br/>
